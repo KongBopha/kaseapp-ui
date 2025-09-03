@@ -1,0 +1,116 @@
+import 'package:get/get.dart';
+import 'package:kaseapp_ui/configs/bindings/binding.dart';
+import 'package:kaseapp_ui/controllers/middleware/get_middle_ware.dart';
+import 'package:kaseapp_ui/views/account_view.dart';
+import 'package:kaseapp_ui/views/home_view.dart';
+import 'package:kaseapp_ui/views/login_view.dart';
+import 'package:kaseapp_ui/views/main_view.dart';
+import 'package:kaseapp_ui/views/pre_order_view.dart';
+import 'package:kaseapp_ui/views/receive_preorder_view.dart';
+import 'package:kaseapp_ui/views/register_view.dart';
+import 'package:kaseapp_ui/views/summaryview.dart';
+import 'package:kaseapp_ui/views/track_view.dart';
+import 'package:kaseapp_ui/views/vendor_front_view.dart';
+import 'package:kaseapp_ui/views/upgraderole_view.dart';
+import 'package:kaseapp_ui/views/farmer_request_view.dart';
+import 'package:kaseapp_ui/views/vendor_request_view.dart';
+
+
+class AppRoutes {
+  // Auth
+  static const String login = '/login';
+  static const String register = '/register';
+
+  // Main App
+  static const String mainView = '/main';
+  static const String home = '/home';
+  static const String account = '/account-view';
+
+  // Features
+  static const String marketView = '/market';
+  static const String vendorFrontView = '/vendor-front';
+  static const String track = '/track';
+  static const String farmerFrontView = '/farmer-front';
+
+  // vendor role
+  static const String vendorOrders = '/vendor-orders';
+  static const String vendorProducts = '/vendor-products';
+
+  // Upgrade role
+  static const String upgradeRole = '/upgrade-role';
+  static const String farmerRequest = '/upgrade-role/farmer';
+  static const String vendorRequest = '/upgrade-role/vendor';
+
+  static const String SummaryView = '/view-summary';
+  static const String retriveOrder = '/order/details';
+  // Generate GetPages
+static List<GetPage> generateRoutes = [
+  // Root route
+  GetPage(
+    name: '/',
+    page: () => const MainView(),
+    binding: RootBinding(),
+    middlewares: [AuthMiddleware()],
+  ),
+
+  // Auth routes
+  GetPage(name: login, page: () => LoginView()),
+  GetPage(name: register, page: () => RegisterTestView()),
+
+  // Track view accessible to all
+  GetPage(name: track, page: () => const TrackView()),
+
+  // Main App routes
+  GetPage(
+    name: home,
+    page: () => const HomePage(),
+    middlewares: [AuthMiddleware()],
+  ),
+  GetPage(
+    name: account,
+    page: () => const AccountView(),
+    middlewares: [AuthMiddleware()],
+  ),
+
+  // Vendor-specific routes
+  GetPage(
+    name: vendorFrontView,
+    page: () => const VendorFrontView(),
+    middlewares: [AuthMiddleware(roleGuard: ['vendor'])],
+  ),
+  GetPage(
+    name: vendorOrders,
+    page: () => const PreOrderRequestView(),
+    middlewares: [AuthMiddleware(roleGuard: ['vendor'])],
+  ),
+  GetPage(
+    name: SummaryView,
+    page: () => NotificationSummaryView(),
+    middlewares: [AuthMiddleware()],
+  ),
+  
+  GetPage(
+    name: retriveOrder,
+    page: () => ReceivePreorderView(),
+    middlewares: [AuthMiddleware()],
+  ),
+
+  // Upgrade role routes
+  GetPage(
+    name: upgradeRole,
+    page: () => UpgradeRoleView(),
+    middlewares: [AuthMiddleware()],
+  ),
+  GetPage(
+    name: farmerRequest,
+    page: () => FarmerRequestView(),
+    middlewares: [AuthMiddleware()],
+  ),
+  GetPage(
+    name: vendorRequest,
+    page: () => VendorRequestView(),
+    middlewares: [AuthMiddleware()],
+  ),
+];
+
+}
