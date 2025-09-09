@@ -54,6 +54,48 @@ factory NotificationModel.fromJson(Map<String, dynamic> json) {
     createdAt: parseDate(json['created_at']),
     updatedAt: parseDate(json['updated_at']),
   );
-}
 
-}
+  }
+    Map<String, dynamic> toJson() {
+    return {
+      'id': id,
+      'recepient_id': recepient_id,
+      'farm_id': farmId,
+      'vendor_id': vendorId,
+      'pre_order_id': preOrderId,
+      'reference_id': referenceId,
+      'message': message,
+      'type': type.name,
+      'read_status': isRead ? 1 : 0,
+      'created_at': createdAt.toIso8601String(),
+      'updated_at': updatedAt.toIso8601String(),
+    };
+  }
+    NotificationModel copyWith({
+    int? id,
+    int? recepientId,
+    int? farmId,
+    int? vendorId,
+    int? preOrderId,
+    int? referenceId,
+    String? message,
+    MessageTypesEnum? type,
+    bool? isRead,
+    DateTime? createdAt,
+    DateTime? updatedAt,
+  }) {
+    return NotificationModel(
+      id: id ?? this.id,
+      recepient_id: recepientId ?? this.recepient_id,
+      farmId: farmId ?? this.farmId,
+      vendorId: vendorId ?? this.vendorId,
+      preOrderId: preOrderId ?? this.preOrderId,
+      referenceId: referenceId ?? this.referenceId,
+      message: message ?? this.message,
+      type: type ?? this.type,
+      isRead: isRead ?? this.isRead,
+      createdAt: createdAt ?? this.createdAt,
+      updatedAt: updatedAt ?? this.updatedAt,
+    );
+  }
+  }

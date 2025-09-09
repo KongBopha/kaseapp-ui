@@ -13,6 +13,7 @@ import 'package:kaseapp_ui/views/track_view.dart';
 import 'package:kaseapp_ui/views/vendor_front_view.dart';
 import 'package:kaseapp_ui/views/upgraderole_view.dart';
 import 'package:kaseapp_ui/views/farmer_request_view.dart';
+import 'package:kaseapp_ui/views/vendor_receive_order_view.dart';
 import 'package:kaseapp_ui/views/vendor_request_view.dart';
 
 
@@ -43,6 +44,7 @@ class AppRoutes {
 
   static const String SummaryView = '/view-summary';
   static const String retriveOrder = '/order/details';
+  static const String orderRespond = '/order-details/listing';
   // Generate GetPages
 static List<GetPage> generateRoutes = [
   // Root route
@@ -83,6 +85,16 @@ static List<GetPage> generateRoutes = [
     page: () => const PreOrderRequestView(),
     middlewares: [AuthMiddleware(roleGuard: ['vendor'])],
   ),
+
+  GetPage(
+    name: orderRespond,
+    page: () => const VendorReceiveOrderView(),
+    middlewares: [AuthMiddleware()],
+  ),
+
+  //**
+  // Authenticated Routes
+  // */
   GetPage(
     name: SummaryView,
     page: () => NotificationSummaryView(),

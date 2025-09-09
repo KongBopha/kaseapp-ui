@@ -13,7 +13,7 @@ class ApiHelper {
   final SecureStorage _secureStorage = SecureStorage();
 
   // -----------------------------
-  //        TOKEN REFRESH
+  // TOKEN REFRESH
   // -----------------------------
   Future<bool> _refreshToken() async {
     try {
@@ -43,7 +43,7 @@ class ApiHelper {
   }
 
   // -----------------------------
-  //        PRIVATE GET
+  // PRIVATE GET
   // -----------------------------
   Future<Map<String, dynamic>> get({
     required String endpoint,
@@ -73,7 +73,6 @@ class ApiHelper {
       if (response.statusCode == 200 || response.statusCode == 201) {
         return response.data as Map<String, dynamic>;
       }
-
       throw ServerFailure(message: 'Invalid response from server');
     } catch (e) {
       rethrow;
@@ -81,7 +80,7 @@ class ApiHelper {
   }
 
   // -----------------------------
-  //        PRIVATE POST
+  // PRIVATE POST
   // -----------------------------
   Future<dynamic> post({
     required String endpoint,
@@ -112,7 +111,6 @@ class ApiHelper {
       if (response.statusCode == 200 || response.statusCode == 201) {
         return response.data;
       }
-
       return {'success': false, 'message': 'Invalid response from server'};
     } catch (e) {
       rethrow;
@@ -120,7 +118,7 @@ class ApiHelper {
   }
 
   // -----------------------------
-  //        PRIVATE PUT
+  // PRIVATE PUT
   // -----------------------------
   Future<dynamic> update({
     required String endpoint,
@@ -146,7 +144,6 @@ class ApiHelper {
           throw ServerFailure(message: 'Session expired. Please log in again.');
         }
       }
-
       return response.data;
     } catch (e) {
       rethrow;
@@ -154,7 +151,7 @@ class ApiHelper {
   }
 
   // -----------------------------
-  //        PRIVATE DELETE
+  // PRIVATE DELETE
   // -----------------------------
   Future<dynamic> delete({
     required String endpoint,
@@ -180,7 +177,6 @@ class ApiHelper {
           throw ServerFailure(message: 'Session expired. Please log in again.');
         }
       }
-
       return response.data;
     } catch (e) {
       rethrow;
@@ -188,7 +184,7 @@ class ApiHelper {
   }
 
   // -----------------------------
-  //        MULTIPART POST
+  // MULTIPART POST
   // -----------------------------
   Future<dynamic> postMultipart({
     required String endPoint,
@@ -199,7 +195,6 @@ class ApiHelper {
     try {
       final token = await _secureStorage.readData(key: 'token');
       final mimeType = image.path.split('.').last;
-
       jsonBody[imageParam] = await MultipartFile.fromFile(
         image.path,
         filename: image.path.split('/').last,
@@ -231,7 +226,6 @@ class ApiHelper {
           throw ServerFailure(message: 'Session expired. Please log in again.');
         }
       }
-
       return response.data;
     } catch (e) {
       rethrow;
@@ -239,7 +233,7 @@ class ApiHelper {
   }
 
   // -----------------------------
-  //        PUBLIC ROUTES
+  // PUBLIC ROUTES
   // -----------------------------
   Future<dynamic> getPublic({
     required String endpoint,
@@ -255,7 +249,6 @@ class ApiHelper {
       if (response.statusCode == 200 || response.statusCode == 201) {
         return response.data as Map<String, dynamic>;
       }
-
       throw ServerFailure(message: 'Unexpected status code: ${response.statusCode}');
     } catch (e) {
       rethrow;
@@ -277,7 +270,6 @@ class ApiHelper {
       if (response.statusCode == 200 || response.statusCode == 201) {
         return response.data;
       }
-
       return {'success': false, 'message': 'Invalid response from server'};
     } catch (e) {
       rethrow;

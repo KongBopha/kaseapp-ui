@@ -1,7 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:kaseapp_ui/controllers/receive_order_respond_controller.dart';
 import 'package:kaseapp_ui/controllers/receiveorder_controller.dart';
+import 'package:kaseapp_ui/repositories/order_detail_repository.dart';
 import 'package:kaseapp_ui/repositories/receive_order_repository%20.dart';
+import 'package:kaseapp_ui/repositories/receive_order_respond_repository.dart';
 
 // Helpers
 import 'package:kaseapp_ui/utils/helper/api_helper.dart';
@@ -27,7 +30,7 @@ import 'package:kaseapp_ui/views/main_view.dart';
 
 void main() {
   WidgetsFlutterBinding.ensureInitialized();
-
+  
   Get.put(AuthController());
   Get.put(UserController());
 
@@ -36,15 +39,22 @@ void main() {
   Get.put(ProductRepository());
   Get.put(PreOrderRepository());
   Get.put(ReceiveOrderRepository());
+  Get.put(OrderDetailRepository());
   Get.lazyPut(() => NotificationRepository(Get.find<ApiHelper>()));
+  Get.put(ReceiveOrderRespondRepository());
 
   Get.put(ProductController(productRepo: Get.find<ProductRepository>()));
   Get.put(PreOrderController(
     preOrderRepo: Get.find<PreOrderRepository>(),
-    productRepo: Get.find<ProductRepository>(),
   ));
   Get.lazyPut(() => NotificationController(Get.find<NotificationRepository>()));
-  Get.put(ReceiveOrderController(repo: ReceiveOrderRepository()));
+  Get.put(ReceiveOrderController(
+    repo: Get.find<ReceiveOrderRepository>(),
+    orderDetailRepository: Get.find<OrderDetailRepository>(),
+  ));
+  Get.put(ReceiveOrderRespondController(
+    receiveOrderRespondRepository:Get.find<ReceiveOrderRespondRepository>()
+  ));
 
   runApp(const MyApp());
 }

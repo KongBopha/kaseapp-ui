@@ -11,11 +11,11 @@ extension OrderDetailStatusExtension on OrderDetailsEnum {
       case OrderDetailsEnum.pending:
         return 'pending';
       case OrderDetailsEnum.accepted:
-        return 'partially_fulfilled';
+        return 'accepted';
       case OrderDetailsEnum.confirmed:
-        return 'fulfilled';
+        return 'confirmed';
       case OrderDetailsEnum.rejected:
-        return 'cancelled';
+        return 'rejected';
     }
   }
 
