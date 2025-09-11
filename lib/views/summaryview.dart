@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:kaseapp_ui/configs/Routes/routes.dart';
 import 'package:kaseapp_ui/controllers/notification_controller.dart';
 import 'package:kaseapp_ui/controllers/user_controller.dart';
 
@@ -12,20 +13,19 @@ class NotificationSummaryView extends StatefulWidget {
 class _NotificationSummaryViewState extends State<NotificationSummaryView> {
   final NotificationController controller = Get.find();
   final UserController userController = Get.find();
-  
 
   @override
   void initState() {
     super.initState();
-    controller.fetchAllNotifications(); // Fetch notifications automatically
+    controller.fetchAllNotifications();
   }
 
   void _viewAll() {
     final role = userController.user.role.toLowerCase();
     if (role == 'farmer') {
-      Get.toNamed('/order/details'); // Farmer sees pending pre-orders
+      Get.toNamed(AppRoutes.retriveOrder);
     } else if (role == 'vendor') {
-      Get.toNamed('/vendor-summary'); // Vendor sees their summaries
+      Get.toNamed(AppRoutes.orderRespond);
     } else {
       Get.snackbar('Info', 'No listing available for your role');
     }
@@ -35,11 +35,11 @@ class _NotificationSummaryViewState extends State<NotificationSummaryView> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('Notifications'),
+        title: const Text('Notifications'),
         actions: [
           TextButton(
             onPressed: _viewAll,
-            child: Text(
+            child: const Text(
               'View All',
               style: TextStyle(color: Colors.black),
             ),
@@ -60,6 +60,7 @@ class _NotificationSummaryViewState extends State<NotificationSummaryView> {
           separatorBuilder: (_, __) => const Divider(),
           itemBuilder: (context, index) {
             final summary = controller.summaries[index];
+
             return ExpansionTile(
               title: Text(
                 summary.product != null
@@ -69,16 +70,33 @@ class _NotificationSummaryViewState extends State<NotificationSummaryView> {
               subtitle: Text(
                 summary.vendor != null
                     ? 'Vendor: ${summary.vendor['name']}'
-                    : '',
+                    : summary.farm != null
+                        ? 'Farm: ${summary.farm['name']}'
+                        : '',
               ),
-              children: const [
-                // Skip taps; we don’t handle detailed navigation here
-                Padding(
-                  padding: EdgeInsets.all(12),
-                  child: Text(
-                      'Tap on "View All" to see the full listing for your role.'),
-                ),
-              ],
+              children: summary.notifications.map<Widget>((notif) {
+                final isUnread = !notif.isRead;
+
+                return ListTile(
+                  leading: Icon(
+                    isUnread ? Icons.markunread : Icons.check,
+                    color: isUnread ? Colors.red : Colors.green,
+                  ),
+                  title: Text(
+                    notif.message,
+                    style: TextStyle(
+                      fontWeight: isUnread ? FontWeight.bold : FontWeight.normal,
+                    ),
+                  ),
+                  subtitle: Text(
+                    notif.createdAt.toLocal().toString(),
+                    style: const TextStyle(fontSize: 12),
+                  ),
+                  onTap: () {
+                    controller.markAsRead(notif.id);
+                  },
+                );
+              }).toList(),
             );
           },
         );

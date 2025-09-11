@@ -20,7 +20,7 @@ class LoginView extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
                 TextField(
-                  controller: phoneController,
+                  controller: phoneController,  
                   decoration: const InputDecoration(
                     labelText: 'Phone',
                     prefixIcon: Icon(Icons.phone),

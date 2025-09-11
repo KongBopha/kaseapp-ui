@@ -1,11 +1,19 @@
 import 'package:get/get.dart';
+import 'package:kaseapp_ui/controllers/middleware/resettable_controller.dart';
+import 'package:kaseapp_ui/controllers/user_controller.dart';
+import 'package:kaseapp_ui/models/order_detail_model.dart';
 import 'package:kaseapp_ui/models/receiveorder_model.dart';
+import 'package:kaseapp_ui/repositories/order_detail_repository.dart';
 import 'package:kaseapp_ui/repositories/receive_order_repository .dart';
+import 'package:kaseapp_ui/utils/order_details_enum.dart';
 
-class ReceiveOrderController extends GetxController {
+class ReceiveOrderController extends GetxController implements ResettableController {
   final ReceiveOrderRepository repo;
+  final OrderDetailRepository orderDetailRepository;
+  final UserController userController = Get.find();
 
-  ReceiveOrderController({required this.repo});
+
+  ReceiveOrderController({required this.repo,required this.orderDetailRepository});
 
   var receiveOrders = <ReceiveorderModel>[].obs;
   var isLoading = false.obs;
@@ -59,4 +67,59 @@ class ReceiveOrderController extends GetxController {
   }
 
   bool get canLoadMore => currentPage.value < lastPage.value;
+    Future<void> respondToPreOrder({
+    required ReceiveorderModel preOrder,
+    required OrderDetailsEnum offerStatus,
+    required int fulfilledQty,
+    String? description,
+  }) async {
+    try {
+      isLoading.value = true;
+
+      // Create OrderDetailModel
+      final orderDetail = OrderDetailModel(
+        pre_order_id: preOrder.preOrderId,
+        farm_id:userController.user.id!,
+        fulfilled_qty: fulfilledQty,
+        offer_status: offerStatus,
+        description: description,
+      );
+
+      final result = await orderDetailRepository.submitOrderDetail(
+        orderDetail: orderDetail,
+        userId: orderDetail.farm_id,
+        preOrderId: preOrder.preOrderId,
+      );
+
+      result.fold(
+        (failure) => Get.snackbar('Error', failure.message),
+        (createdOrder) {
+          // Update UI: mark this pre-order as responded
+          final index = receiveOrders.indexWhere(
+              (element) => element.preOrderId == preOrder.preOrderId);
+          if (index != -1) {
+            receiveOrders[index] = receiveOrders[index].copyWith(
+              status: offerStatus == OrderDetailsEnum.accepted
+                  ? 'Accepted'
+                  : 'Rejected',
+            );
+          }
+          Get.snackbar('Success', 'Response submitted successfully');
+        },
+      );
+    }catch (e, s) {    
+    print('RespondToPreOrder Error: $e');
+    print(s);
+    Get.snackbar('Error', e.toString());
+  } finally {
+      isLoading.value = false;
+    }
+  }
+  
+  @override
+  void reset() {
+    receiveOrders.clear();
+    isLoading.value = false;
+    print("ReceiveOrderController has been reset");
+ } 
 }

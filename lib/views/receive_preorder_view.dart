@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:kaseapp_ui/controllers/receiveorder_controller.dart';
+import 'package:kaseapp_ui/models/receiveorder_model.dart';
+import 'package:kaseapp_ui/utils/order_details_enum.dart';
 import 'package:kaseapp_ui/configs/themes/app_theme.dart';
 
 class ReceivePreorderView extends StatefulWidget {
@@ -17,6 +19,8 @@ class _ReceivePreorderViewState extends State<ReceivePreorderView> {
   @override
   void initState() {
     super.initState();
+
+    // Pagination on scroll
     _scrollController.addListener(() {
       if (_scrollController.position.pixels ==
               _scrollController.position.maxScrollExtent &&
@@ -51,78 +55,54 @@ class _ReceivePreorderViewState extends State<ReceivePreorderView> {
             fontWeight: FontWeight.w600,
           ),
         ),
-        actions: [
- 
-        ],
       ),
-      body: Obx(() => SingleChildScrollView(
-        controller: _scrollController,
-        child: Container(
-          padding: const EdgeInsets.all(16),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              // Pre-order Requests Section
-              Row(
+      body: Obx(
+        () {
+          if (controller.isLoading.value && controller.receiveOrders.isEmpty) {
+            return const Center(child: CircularProgressIndicator());
+          }
+
+          if (controller.receiveOrders.isEmpty) {
+            return _buildEmptyState();
+          }
+
+          return ListView.builder(
+            controller: _scrollController,
+            padding: const EdgeInsets.all(16),
+            itemCount: controller.receiveOrders.length + 1,
+            itemBuilder: (context, index) {
+              if (index == controller.receiveOrders.length) {
+                return controller.canLoadMore
+                    ? const Padding(
+                        padding: EdgeInsets.all(8.0),
+                        child: Center(child: CircularProgressIndicator()),
+                      )
+                    : const SizedBox.shrink();
+              }
+
+              final order = controller.receiveOrders[index];
+              return Column(
                 children: [
-                  Icon(
-                    Icons.schedule,
-                    color: Colors.orange,
-                    size: 20,
-                  ),
-                  const SizedBox(width: 8),
-                  Text(
-                    'Pre-order Requests',
-                    style: TextStyle(
-                      color: AppTheme.itemTitleColor,
-                      fontSize: 18,
-                      fontWeight: FontWeight.w600,
-                    ),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 16),
-              if (controller.receiveOrders.isEmpty)
-                const Center(child: Text('No requests available')),
-              ...controller.receiveOrders.map((order) => Column(
-                children: [
-                  _buildPreorderCard(
-                    title: order.productName,
-                    vendorName: order.vendorName,
-                    quantity: order.quantity,
-                    location: order.location,
-                    note: order.note,
-                    deliveryDate: order.deliveryDate,
-                    status: order.status,
-                    isPending: order.status.toLowerCase() == 'pending',
-                    ),
+                  _buildPreorderCard(order: order),
                   const SizedBox(height: 12),
                 ],
-              )).toList(),
-            ],
-          ),
-        ),
-      )),
+              );
+            },
+          );
+        },
+      ),
     );
   }
 
-  Widget _buildPreorderCard({
-    required String title,
-    required String vendorName,
-    required double quantity,
-    required String location,
-    required String note,
-    required String deliveryDate,
-    required String status,
-    required bool isPending,
-  }) {
+  Widget _buildPreorderCard({required ReceiveorderModel order}) {
+    final bool isPending = order.status.toLowerCase() == 'pending';
+
     return Container(
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(12),
         boxShadow: [
           BoxShadow(
-            // ignore: deprecated_member_use
             color: Colors.black.withOpacity(0.05),
             blurRadius: 8,
             offset: const Offset(0, 2),
@@ -133,7 +113,7 @@ class _ReceivePreorderViewState extends State<ReceivePreorderView> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Header with title and status
+          // Header
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
@@ -142,7 +122,7 @@ class _ReceivePreorderViewState extends State<ReceivePreorderView> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      title,
+                      order.productName,
                       style: TextStyle(
                         color: AppTheme.itemTitleColor,
                         fontSize: 16,
@@ -151,7 +131,7 @@ class _ReceivePreorderViewState extends State<ReceivePreorderView> {
                     ),
                     const SizedBox(height: 4),
                     Text(
-                      'Vendor: $vendorName\nQty: $quantity',
+                      'Vendor: ${order.vendorName}\nQty: ${order.quantity}',
                       style: TextStyle(
                         color: AppTheme.itemSubTitleColor,
                         fontSize: 12,
@@ -167,7 +147,7 @@ class _ReceivePreorderViewState extends State<ReceivePreorderView> {
                   borderRadius: BorderRadius.circular(12),
                 ),
                 child: Text(
-                  status,
+                  order.status,
                   style: const TextStyle(
                     color: Colors.white,
                     fontSize: 10,
@@ -180,29 +160,22 @@ class _ReceivePreorderViewState extends State<ReceivePreorderView> {
 
           const SizedBox(height: 16),
 
-          // Additional Info
+          // Location & Delivery
           Row(
             children: [
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(
-                      'Location',
-                      style: TextStyle(
-                        color: AppTheme.itemSubTitleColor,
-                        fontSize: 12,
-                      ),
-                    ),
+                    Text('Location',
+                        style: TextStyle(
+                            color: AppTheme.itemSubTitleColor, fontSize: 12)),
                     const SizedBox(height: 4),
-                    Text(
-                      location,
-                      style: TextStyle(
-                        color: Colors.green,
-                        fontSize: 14,
-                        fontWeight: FontWeight.w600,
-                      ),
-                    ),
+                    Text(order.location,
+                        style: const TextStyle(
+                            color: Colors.green,
+                            fontSize: 14,
+                            fontWeight: FontWeight.w600)),
                   ],
                 ),
               ),
@@ -210,22 +183,15 @@ class _ReceivePreorderViewState extends State<ReceivePreorderView> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(
-                      'Delivery',
-                      style: TextStyle(
-                        color: AppTheme.itemSubTitleColor,
-                        fontSize: 12,
-                      ),
-                    ),
+                    Text('Delivery',
+                        style: TextStyle(
+                            color: AppTheme.itemSubTitleColor, fontSize: 12)),
                     const SizedBox(height: 4),
-                    Text(
-                      deliveryDate,
-                      style: TextStyle(
-                        color: Colors.green,
-                        fontSize: 14,
-                        fontWeight: FontWeight.w600,
-                      ),
-                    ),
+                    Text(order.deliveryDate,
+                        style: const TextStyle(
+                            color: Colors.green,
+                            fontSize: 14,
+                            fontWeight: FontWeight.w600)),
                   ],
                 ),
               ),
@@ -235,69 +201,124 @@ class _ReceivePreorderViewState extends State<ReceivePreorderView> {
           const SizedBox(height: 8),
 
           // Note
-          Text(
-            'Note: $note',
-            style: TextStyle(
-              color: AppTheme.itemSubTitleColor,
-              fontSize: 12,
-            ),
-          ),
+          Text('Note: ${order.note}',
+              style: TextStyle(
+                color: AppTheme.itemSubTitleColor,
+                fontSize: 12,
+              )),
 
-          // Action buttons (only show for pending items)
+          // Action buttons
           if (isPending) ...[
             const SizedBox(height: 16),
             Row(
               children: [
                 Expanded(
                   child: ElevatedButton(
-                    onPressed: () {
-                      // Handle accept action
-                    },
+                    onPressed: () => _showResponseDialog(
+                        preOrder: order, offerStatus: OrderDetailsEnum.accepted),
                     style: ElevatedButton.styleFrom(
                       backgroundColor: Colors.green,
-                      foregroundColor: Colors.white,
-                      elevation: 0,
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(8),
-                      ),
                       padding: const EdgeInsets.symmetric(vertical: 12),
+                      shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(8)),
                     ),
-                    child: const Text(
-                      'Accept',
-                      style: TextStyle(
-                        fontWeight: FontWeight.w600,
-                      ),
-                    ),
+                    child: const Text('Accept',
+                        style: TextStyle(fontWeight: FontWeight.w600)),
                   ),
                 ),
                 const SizedBox(width: 12),
                 Expanded(
                   child: OutlinedButton(
-                    onPressed: () {
-                      // Handle reject action
-                    },
+                    onPressed: () => _showResponseDialog(
+                        preOrder: order, offerStatus: OrderDetailsEnum.rejected),
                     style: OutlinedButton.styleFrom(
-                      foregroundColor: AppTheme.itemSubTitleColor,
-                      side: BorderSide(color: AppTheme.itemSubTitleColor),
-                      elevation: 0,
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(8),
-                      ),
+                      foregroundColor: Colors.red,
+                      side: const BorderSide(color: Colors.red),
                       padding: const EdgeInsets.symmetric(vertical: 12),
+                      shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(8)),
                     ),
-                    child: const Text(
-                      'Reject',
-                      style: TextStyle(
-                        fontWeight: FontWeight.w600,
-                      ),
-                    ),
+                    child: const Text('Reject',
+                        style: TextStyle(fontWeight: FontWeight.w600)),
                   ),
                 ),
               ],
-            ),
-          ],
+            )
+          ]
         ],
       ),
     );
+  }
+
+  Widget _buildEmptyState() {
+    return Center(
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Icon(Icons.inbox_outlined, size: 80, color: AppTheme.itemSubTitleColor),
+          const SizedBox(height: 16),
+          Text('No Responses Yet',
+              style: TextStyle(
+                  color: AppTheme.itemTitleColor,
+                  fontSize: 20,
+                  fontWeight: FontWeight.w600)),
+          const SizedBox(height: 8),
+          Text('When vendors respond to your pre-orders, they will appear here.',
+              textAlign: TextAlign.center,
+              style: TextStyle(color: AppTheme.itemSubTitleColor, fontSize: 14)),
+        ],
+      ),
+    );
+  }
+
+  void _showResponseDialog({
+    required ReceiveorderModel preOrder,
+    required OrderDetailsEnum offerStatus,
+  }) {
+    final TextEditingController qtyController = TextEditingController();
+    final TextEditingController descController = TextEditingController();
+
+    Get.defaultDialog(
+      title: offerStatus == OrderDetailsEnum.accepted
+          ? 'Accept Pre-order'
+          : 'Reject Pre-order',
+      content: Column(
+        children: [
+          if (offerStatus == OrderDetailsEnum.accepted)
+            TextField(
+              controller: qtyController,
+              keyboardType: TextInputType.number,
+              decoration:
+                  const InputDecoration(labelText: 'Quantity you can provide'),
+            ),
+          TextField(
+            controller: descController,
+            decoration:
+                const InputDecoration(labelText: 'Description (optional)'),
+          ),
+        ],
+      ),
+      textConfirm: 'Submit',
+      textCancel: 'Cancel',
+      onConfirm: () {
+        final qty = int.tryParse(qtyController.text) ?? 0;
+        controller.respondToPreOrder(
+          preOrder: preOrder,
+          offerStatus: offerStatus,
+          fulfilledQty: qty,
+          description: descController.text,
+        );
+        Get.back();
+        // if(){
+
+        // }
+       clearPreOrderCard(preOrder);
+      },
+    );
+  }
+  // clear card
+  void clearPreOrderCard(ReceiveorderModel preOrder){
+    controller.receiveOrders.removeWhere(
+      (order) => order.preOrderId == preOrder.preOrderId);
   }
 }

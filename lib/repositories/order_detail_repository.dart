@@ -1,42 +1,50 @@
-// import 'package:kaseapp_ui/models/order_detail_model.dart';
-// import 'package:kaseapp_ui/models/pre_order_model.dart';
-// import 'package:kaseapp_ui/models/product.dart';
-// import 'package:kaseapp_ui/utils/error/failure.dart';
-// import 'package:kaseapp_ui/utils/helper/api_helper.dart';
-// import 'package:dartz/dartz.dart';
-// import 'package:kaseapp_ui/utils/order_details_enum.dart';
+import 'package:kaseapp_ui/models/order_detail_model.dart';
+import 'package:kaseapp_ui/utils/error/failure.dart';
+import 'package:kaseapp_ui/utils/helper/api_helper.dart';
+import 'package:dartz/dartz.dart';
 
 
-// class OrderDetailRepository {
+class OrderDetailRepository {
+  final ApiHelper _apiHelper = ApiHelper();
 
-//   final ApiHelper _apiHelper = ApiHelper();
+  // Create order detail for a farm
+  Future<Either<Failure, OrderDetailModel>> submitOrderDetail({
+    required int preOrderId,
+    required int userId,
+    required OrderDetailModel orderDetail,
+  }) async {
+    try {
+      final response = await _apiHelper.post(
+        endpoint: '/order-details/$preOrderId',
+        jsonBody: orderDetail.toJson(),
+      );
 
-//   // create order details for farmer
+      final submittedOrderDetail = OrderDetailModel.fromJson(response);
+      return right(submittedOrderDetail);
+    } on Failure catch (e) {
+      return left(e);
+    }
+  }
 
-//   Future<Either<Failure,OrderDetailModel>> createOrderDetail
-//   (
-//     {required OrderDetailModel model, required int userId,
-//     Product? product, PreOrder? preOrder}
-//   )async
-//   { 
-//    try{
-//     final order = OrderDetailModel
-//     (
-//       id: null,
-//       pre_order_id: model.pre_order_id, 
-//       farm_id: userId, 
-//       fulfilled_qty: model.fulfilled_qty, 
-//       offer_status: OrderDetailsEnum.accepted, 
-//       preOrder: preOrder
-//     );
-//       final dynamic response = await _apiHelper.post(
-//         endpoint: '/order-details/{preOrderId}',
-//         jsonBody: order.toJson(),
-//       );
-//       final createOrderDetail = OrderDetailModel.fromJson(response);
-//       return right(createOrderDetail);
-//    }on Failure catch(e){
-//       return left(e);
-//    } 
-//   }
-// } 
+  // Reject Request 
+  Future<Either<Failure,bool>> rejectPreOrder(
+    { required int preOrderId,
+      required int userId,
+      required OrderDetailModel orderDetail,
+}
+  )async{
+    try{
+      final response = await _apiHelper.post(
+        endpoint: '/', 
+        jsonBody: {
+          
+      },
+      );
+    return right(response['success']??true);
+    }on Failure catch(e)
+    {
+      return left(e);
+    }
+    
+  }
+}

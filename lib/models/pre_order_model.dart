@@ -30,7 +30,7 @@ class PreOrder {
 
   factory PreOrder.fromJson(Map<String, dynamic> json) {
     return PreOrder(
-      id: json['id'] != null ? (json['id'] as num).toInt() : null,
+      id: json['id'] != null ? (json['id'] as num).toInt() : 0,
       userId: json['user_id'] != null ? (json['user_id'] as num).toInt() : 0,
       cropId: json['crop_id'] != null ? (json['crop_id'] as num).toInt() : null,
       productId: json['product_id'] != null ? (json['product_id'] as num).toInt() : 0,

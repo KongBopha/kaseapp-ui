@@ -257,15 +257,14 @@ Widget _buildHeader() {
     }
   }
   
-  void _submitForm() {
-    if (_formKey.currentState!.validate()) {
-
-      if (_preOrderController.products.isEmpty) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(
-        content: Text('Products are still loading, please wait...'),
-        backgroundColor: Colors.orange,
-      ),
+void _submitForm() async {
+  if (_formKey.currentState!.validate()) {
+    if (_preOrderController.products.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Products are still loading, please wait...'),
+          backgroundColor: Colors.orange,
+        ),
       );
       return;
     }
@@ -284,36 +283,54 @@ Widget _buildHeader() {
       (p) => p.id.toString() == selectedProduct,
       orElse: () => throw Exception('Product not found'),
     );
-      final preOrderModel = PreOrder(
-        id: null,
-        userId: _preOrderController.userController.user.id!,
-        productId: product.id,
-        qty: double.parse(_quantityController.text),
-        location: "Default Location", // or get from user
-        deliveryDate: selectedDeliveryDate,
-        noteText: _notesController.text.isNotEmpty ? _notesController.text : null,
-        status: PreOrderStatus.pending,
-        cropId: null,
-        recurringSchedule: _recurringScheduleController.text.isNotEmpty ? _recurringScheduleController.text : null,
-      );
 
-      // Call controller to create pre-order
-      _preOrderController.createPreOrder(model: preOrderModel);
+    final preOrderModel = PreOrder(
+      id: null,
+      userId: _preOrderController.userController.user.id!,
+      productId: product.id,
+      qty: double.parse(_quantityController.text),
+      location: "Default Location",
+      deliveryDate: selectedDeliveryDate,
+      noteText: _notesController.text.isNotEmpty ? _notesController.text : null,
+      status: PreOrderStatus.pending,
+      cropId: null,
+      recurringSchedule: _recurringScheduleController.text.isNotEmpty
+          ? _recurringScheduleController.text
+          : null,
+    );
 
-      // Show success message
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('Pre-order created successfully!'),
-          backgroundColor: Colors.green,
-        ),
-      );
+    final result = await _preOrderController.preOrderRepo.createPreOrder(
+      model: preOrderModel,
+      userId: _preOrderController.userController.user.id!,
+      product: product,
+    );
 
-      // Navigate back
-      Future.delayed(const Duration(seconds: 1), () {
-        Navigator.pop(context);
-      });
-    }
+    result.fold(
+      (failure) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Error: ${failure.message}'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      },
+      (success) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Pre-order created successfully!'),
+            backgroundColor: Colors.green,
+          ),
+        );
+
+        // Navigate back
+        Future.delayed(const Duration(seconds: 1), () {
+          Navigator.pop(context);
+        });
+      },
+    );
   }
+}
+
   
   @override
   void dispose() {

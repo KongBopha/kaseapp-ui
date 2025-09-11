@@ -9,6 +9,8 @@ class ProductRepository {
   Future<Either<Failure, List<Product>>> fetchProductsByName() async {
     try {
       final response = await _apiHelper.getPublic(endpoint: '/auth/get-products/byname');
+      print('Raw Product API Response: $response');
+
 
       if (response is Map<String, dynamic> && response.containsKey('data')) {
         final dataList = (response['data'] as List?) ?? [];

@@ -6,7 +6,7 @@ class ReceiveorderModel {
   final String location;
   final String note;
   final String deliveryDate;  
-  final String status;
+  late final String status;
 
   ReceiveorderModel({
     required this.preOrderId,
@@ -21,7 +21,7 @@ class ReceiveorderModel {
 
   factory ReceiveorderModel.fromJson(Map<String, dynamic> json) {
     return ReceiveorderModel(
-      preOrderId: json['pre_order_id'],
+      preOrderId: json['pre_order_id']!= null ? (json['pre_order_id'] as num).toInt() : 0,
       vendorName: json['vendor_name'],
       productName: json['product_name'],
       quantity: double.tryParse(json['quantity'].toString()) ?? 0.0, 
@@ -44,4 +44,26 @@ class ReceiveorderModel {
       'status': status,
     };
   }
+  ReceiveorderModel copyWith({
+    int? preOrderId,
+    String? vendorName,
+    String? productName,
+    double? quantity,
+    String? location,
+    String? note,
+    String? deliveryDate,
+    String? status,
+  }) {
+    return ReceiveorderModel(
+      preOrderId: preOrderId ?? this.preOrderId,
+      vendorName: vendorName ?? this.vendorName,
+      productName: productName ?? this.productName,
+      quantity: quantity ?? this.quantity,
+      location: location ?? this.location,
+      note: note ?? this.note,
+      deliveryDate: deliveryDate ?? this.deliveryDate,
+      status: status ?? this.status,
+    );
+  }
+
 }
