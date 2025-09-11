@@ -35,22 +35,4 @@ class ProductController extends GetxController {
 
     isLoading.value = false;
   }
-
-  /// Fetch a specific product by ID and update the reactive list
-  // Future<void> fetchSpecificProduct(int productId) async {
-  //   isLoading.value = true;
-  //   final result = await productRepo.getProductsbyId(productId);
-
-  //   result.fold(
-  //     (failure) {
-  //       Get.snackbar('Error', failure.message);
-  //     },
-  //     (productData) {
-  //       final data = productData['data'];
-  //       products.assignAll([Product.fromJson(data)]);
-  //     },
-  //   );
-
-  //   isLoading.value = false;
-  // }
 }

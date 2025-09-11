@@ -111,7 +111,7 @@ class _VendorFrontViewState extends State<VendorFrontView> {
                       icon: Icons.inventory_2_outlined,
                       color: Colors.orange, // Retained original color
                       onTap: () {
-                        // Get.toNamed('/my${AppRoutes.receiveScannerView}');
+                        Get.toNamed('/my${AppRoutes.orderRespond}');
                       },
                     ),
                   ],

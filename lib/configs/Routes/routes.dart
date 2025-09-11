@@ -5,9 +5,11 @@ import 'package:kaseapp_ui/views/account_view.dart';
 import 'package:kaseapp_ui/views/home_view.dart';
 import 'package:kaseapp_ui/views/login_view.dart';
 import 'package:kaseapp_ui/views/main_view.dart';
+import 'package:kaseapp_ui/views/market_view.dart';
 import 'package:kaseapp_ui/views/pre_order_view.dart';
 import 'package:kaseapp_ui/views/receive_preorder_view.dart';
 import 'package:kaseapp_ui/views/register_view.dart';
+import 'package:kaseapp_ui/views/splash_screen_view.dart';
 import 'package:kaseapp_ui/views/summaryview.dart';
 import 'package:kaseapp_ui/views/track_view.dart';
 import 'package:kaseapp_ui/views/vendor_front_view.dart';
@@ -26,6 +28,7 @@ class AppRoutes {
   static const String mainView = '/main';
   static const String home = '/home';
   static const String account = '/account-view';
+  static const String splash = '/splash'; 
 
   // Features
   static const String marketView = '/market';
@@ -56,8 +59,10 @@ static List<GetPage> generateRoutes = [
   ),
 
   // Auth routes
+  GetPage(name: splash, page: () => const SplashScreenView()),
   GetPage(name: login, page: () => LoginView()),
   GetPage(name: register, page: () => RegisterTestView()),
+  GetPage(name: marketView, page: ()=>MarketView()),
 
   // Track view accessible to all
   GetPage(name: track, page: () => const TrackView()),

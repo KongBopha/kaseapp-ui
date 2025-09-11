@@ -13,7 +13,7 @@ class NotificationRepository {
     final response = await _apiHelper.get(endpoint: '/notifications/unread');
 
     // Debug print
-    print('Raw API response: $response');
+   // print('Raw API response: $response');
 
     return {
       'total_unread': response['unread_count'] ?? 0,
@@ -25,19 +25,19 @@ class NotificationRepository {
   Future<List<NotificationSummary>> getAllNotifications() async {
     final response = await _apiHelper.get(endpoint: '/notifications');
 
-    print("API response: $response"); // Debug
+   // print("API response: $response"); // Debug
 
     final dataList = (response['data'] as List?) ?? [];
-    print("Data list length: ${dataList.length}"); // Debug
+   // print("Data list length: ${dataList.length}"); // Debug
 
     final summaries = dataList
         .map((group) {
-          print("Parsing group: $group"); // Debug
+          //print("Parsing group: $group"); // Debug
           return NotificationSummary.fromJson(group as Map<String, dynamic>);
         })
         .toList();
 
-    print("Parsed summaries length: ${summaries.length}"); // Debug
+   // print("Parsed summaries length: ${summaries.length}"); // Debug
 
     return summaries;
   }

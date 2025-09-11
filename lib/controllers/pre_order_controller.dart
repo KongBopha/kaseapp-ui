@@ -1,12 +1,13 @@
 import 'package:get/get.dart';
 import 'package:kaseapp_ui/configs/Routes/routes.dart';
+import 'package:kaseapp_ui/controllers/middleware/resettable_controller.dart';
 import 'package:kaseapp_ui/controllers/product_controller.dart';
 import 'package:kaseapp_ui/controllers/user_controller.dart';
 import 'package:kaseapp_ui/models/pre_order_model.dart';
 import 'package:kaseapp_ui/models/product.dart';
 import 'package:kaseapp_ui/repositories/pre_order_repository.dart';
 
-class PreOrderController extends GetxController {
+class PreOrderController extends GetxController implements ResettableController{
   final PreOrderRepository preOrderRepo;
   final UserController userController = Get.find();
   final ProductController productController = Get.find();
@@ -56,5 +57,12 @@ class PreOrderController extends GetxController {
     );
 
     isLoading.value = false;
+  }
+  @override
+  void reset() {
+    preOrders.clear();
+    products.clear();
+    isLoading.value = true;
+    print('PreOrderController has been reset');
   }
 }

@@ -1,4 +1,5 @@
 import 'package:get/get.dart';
+import 'package:kaseapp_ui/controllers/middleware/resettable_controller.dart';
 import 'package:kaseapp_ui/controllers/user_controller.dart';
 import 'package:kaseapp_ui/models/order_detail_model.dart';
 import 'package:kaseapp_ui/models/receiveorder_model.dart';
@@ -6,7 +7,7 @@ import 'package:kaseapp_ui/repositories/order_detail_repository.dart';
 import 'package:kaseapp_ui/repositories/receive_order_repository .dart';
 import 'package:kaseapp_ui/utils/order_details_enum.dart';
 
-class ReceiveOrderController extends GetxController {
+class ReceiveOrderController extends GetxController implements ResettableController {
   final ReceiveOrderRepository repo;
   final OrderDetailRepository orderDetailRepository;
   final UserController userController = Get.find();
@@ -106,10 +107,19 @@ class ReceiveOrderController extends GetxController {
           Get.snackbar('Success', 'Response submitted successfully');
         },
       );
-    } catch (e) {
-      Get.snackbar('Error', e.toString());
-    } finally {
+    }catch (e, s) {    
+    print('RespondToPreOrder Error: $e');
+    print(s);
+    Get.snackbar('Error', e.toString());
+  } finally {
       isLoading.value = false;
     }
   }
+  
+  @override
+  void reset() {
+    receiveOrders.clear();
+    isLoading.value = false;
+    print("ReceiveOrderController has been reset");
+ } 
 }

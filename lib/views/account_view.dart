@@ -24,6 +24,15 @@ class _AccountViewState extends State<AccountView> {
   final UserController _userController = Get.find();
   final LogoutController logoutController = Get.put(LogoutController());
 
+  // Helper to get correct profile image URL
+  String getProfileImageUrl(String? profileUrl) {
+    if (profileUrl == null || profileUrl.isEmpty) return AppImage.userProfile;
+
+    if (profileUrl.startsWith("http")) return profileUrl;
+    final cleanPath = profileUrl.replaceAll(RegExp(r'^/storage/profile_photos/'), '');
+    return '${Constants.mainUrl}/storage/profile_photos/$cleanPath';
+  }
+
   @override
   Widget build(BuildContext context) {
     final size = MediaQuery.of(context).size;
@@ -34,19 +43,14 @@ class _AccountViewState extends State<AccountView> {
         automaticallyImplyLeading: false,
         actions: [
           IconButton(
-              onPressed: () {},
-              // onPressed: () => Get.toNamed(AppRoutes.language),
-              icon: Icon(
-                Icons.language,
-                color: actionButtonColor,
-                size: actionButtonSize,
-              )),
-          // IconButton(
-          //   onPressed: () => Get.toNamed(AppRoutes.setting),
-          //   icon: Icon(Icons.settings,
-          //       color: actionButtonColor, size: actionButtonSize),
-          // ),
-          const SizedBox(width: 10)
+            onPressed: () {},
+            icon: Icon(
+              Icons.language,
+              color: actionButtonColor,
+              size: actionButtonSize,
+            ),
+          ),
+          const SizedBox(width: 10),
         ],
       ),
       body: SingleChildScrollView(
@@ -55,7 +59,7 @@ class _AccountViewState extends State<AccountView> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Container(
-              width: size.width,  
+              width: size.width,
               padding: const EdgeInsets.all(25),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.center,
@@ -66,26 +70,15 @@ class _AccountViewState extends State<AccountView> {
                       borderRadius: BorderRadius.circular(50),
                       child: Padding(
                         padding: const EdgeInsets.all(2.0),
-                        child: _userController.user.profileUrl == null
-                            ? CircleAvatar(
-                                radius: size.height * 0.06,
-                                backgroundImage: const AssetImage(
-                                  AppImage.userProfile,
-                                ),
-                                key: const ValueKey("default"),
-                              )
-                            : CircleAvatar(
-                                radius: size.height * 0.06,
-                                backgroundImage: NetworkImage(_userController
-                                        .user.profileUrl!
-                                        .contains("https")
-                                    ? _userController.user.profileUrl!
-                                    : '${Constants.mainUrl}/storage/images/${_userController.user.profileUrl!}'),
-                                key: ValueKey(_userController.user.profileUrl!
-                                        .contains("https")
-                                    ? _userController.user.profileUrl!
-                                    : '${Constants.mainUrl}/storage/images/${_userController.user.profileUrl!}'),
-                              ),
+                          child: CircleAvatar(
+                            radius: size.height * 0.06,
+                            backgroundImage: _userController.user.profileUrl == null ||
+                                    _userController.user.profileUrl!.isEmpty
+                                ? const AssetImage(AppImage.userProfile) as ImageProvider
+                                : NetworkImage(getProfileImageUrl(_userController.user.profileUrl)),
+                            key: ValueKey(_userController.user.profileUrl ?? "default"),
+                          ),
+
                       ),
                     ),
                   ),
@@ -95,20 +88,16 @@ class _AccountViewState extends State<AccountView> {
                       crossAxisAlignment: CrossAxisAlignment.center,
                       children: [
                         Text(
-                          // userController.user.fullName!,
                           _userController.user.firstName != null
                               ? "${_userController.user.firstName} ${_userController.user.lastName}"
                               : "No Username".tr,
-                          // "Pink Panther",
                           style: const TextStyle(
                             fontSize: 28,
                             fontWeight: FontWeight.w500,
                           ),
                         ),
                         Text(_userController.user.role),
-                        const SizedBox(
-                          width: 10,
-                        ),
+                        const SizedBox(width: 10),
                       ],
                     ),
                   ),
@@ -118,54 +107,25 @@ class _AccountViewState extends State<AccountView> {
             Feature(
               title: "User information".tr,
               showIcon: true,
-              // onTap: () => Get.toNamed(
-              //   // '/my${AppRoutes.userInformationView}',
-              // ),
             ),
-            const SizedBox(
-              height: 10,
-            ),
-            const SizedBox(
-              height: 10,
-            ),
+            const SizedBox(height: 10),
             Feature(
               title: "Accepted Order",
               showIcon: true,
-              // onTap: () => Get.toNamed(
-              //   // '/my${AppRoutes.acceptedOrderView}',
-              // ),
             ),
-
             const Padding(
               padding: EdgeInsets.only(left: 20.0, top: 10, bottom: 20),
               child: Text(
                 "connect with other services",
-                style: TextStyle(
-                  color: Colors.black45,
-                ),
+                style: TextStyle(color: Colors.black45),
               ),
             ),
-            const Feature(
-              title: "Customer Service",
-              showIcon: false,
-            ),
-            const SizedBox(
-              height: 10,
-            ),
-            const Feature(
-              title: "Support Center",
-              showIcon: false,
-            ),
-            const SizedBox(
-              height: 10,
-            ),
-            const Feature(
-              title: "Address",
-              showIcon: false,
-            ),
-            const SizedBox(
-              height: 10,
-            ),
+            const Feature(title: "Customer Service", showIcon: false),
+            const SizedBox(height: 10),
+            const Feature(title: "Support Center", showIcon: false),
+            const SizedBox(height: 10),
+            const Feature(title: "Address", showIcon: false),
+            const SizedBox(height: 10),
             if (_userController.user.firstName != null)
               Feature(
                 title: "Log Out".tr,
@@ -180,6 +140,7 @@ class _AccountViewState extends State<AccountView> {
     );
   }
 }
+
 
 class Feature extends StatelessWidget {
   const Feature({

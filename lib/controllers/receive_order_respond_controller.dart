@@ -1,4 +1,5 @@
 import 'package:get/get.dart';
+import 'package:kaseapp_ui/controllers/middleware/resettable_controller.dart';
 import 'package:kaseapp_ui/controllers/user_controller.dart';
 import 'package:kaseapp_ui/models/vendor_receive_preorder_model.dart';
 //import 'package:kaseapp_ui/repositories/order_detail_repository.dart';
@@ -6,7 +7,7 @@ import 'package:kaseapp_ui/repositories/receive_order_respond_repository.dart';
 import 'package:kaseapp_ui/utils/order_details_enum.dart';
 
 
-class ReceiveOrderRespondController extends GetxController{
+class ReceiveOrderRespondController extends GetxController implements ResettableController{
 
   final ReceiveOrderRespondRepository receiveOrderRespondRepository;
 //  final OrderDetailRepository orderDetailRepository;
@@ -110,5 +111,11 @@ Future<void> respondToOffer({
     isLoading.value = false;
   }
 }
+
+  @override
+  void reset() {
+    receiveOrders.clear();
+    isLoading.value = false;
+    print("ReceiveOrderRespondController has been reset");  }
 
 }

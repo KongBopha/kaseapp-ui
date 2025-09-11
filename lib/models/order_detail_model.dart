@@ -20,19 +20,20 @@ class OrderDetailModel {
     this.description,
   });
 
-  factory OrderDetailModel.fromJson(Map<String, dynamic> json) {
-    return OrderDetailModel(
-      id: json['id']!= null ? (json['id'] as num).toInt() : 0,
-      pre_order_id: json['pre_order_id'],
-      farm_id: json['farm_id'],
-      crop_id: json['crop_id']!= null ? (json['id'] as num).toInt() : 0,
-      fulfilled_qty: (json['fulfilled_qty'] is String)
-          ? int.tryParse(json['fulfilled_qty']) ?? 0
-          : json['fulfilled_qty'] ?? 0,
-      offer_status: OrderDetailStatusExtension.fromString(json['offer_status']??'pending'),
-      description: json['description']??null,
-    );
-  }
+factory OrderDetailModel.fromJson(Map<String, dynamic> json) {
+  return OrderDetailModel(
+    id: json['id'] != null ? (json['id'] as num).toInt() : null,
+    pre_order_id: json['pre_order_id'] != null ? (json['pre_order_id'] as num).toInt() : 0,
+    farm_id: json['farm_id'] != null ? (json['farm_id'] as num).toInt() : 0,
+    crop_id: json['crop_id'] != null ? (json['crop_id'] as num).toInt() : null,
+    fulfilled_qty: (json['fulfilled_qty'] is String)
+        ? int.tryParse(json['fulfilled_qty']) ?? 0
+        : json['fulfilled_qty'] ?? 0,
+    offer_status: OrderDetailStatusExtension.fromString(json['offer_status'] ?? 'pending'),
+    description: json['description'],
+  );
+}
+
 
   Map<String, dynamic> toJson() {
     return {

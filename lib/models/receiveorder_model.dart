@@ -21,7 +21,7 @@ class ReceiveorderModel {
 
   factory ReceiveorderModel.fromJson(Map<String, dynamic> json) {
     return ReceiveorderModel(
-      preOrderId: json['pre_order_id'],
+      preOrderId: json['pre_order_id']!= null ? (json['pre_order_id'] as num).toInt() : 0,
       vendorName: json['vendor_name'],
       productName: json['product_name'],
       quantity: double.tryParse(json['quantity'].toString()) ?? 0.0, 

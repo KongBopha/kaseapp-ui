@@ -56,4 +56,5 @@ class UserModel {
         "created_at": createdAt?.toIso8601String(),
         "updated_at": updatedAt?.toIso8601String(),
       };
+  factory UserModel.empty() => UserModel(role: 'consumer');
 }
