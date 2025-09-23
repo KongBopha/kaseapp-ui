@@ -1,11 +1,11 @@
 import 'package:get/get.dart';
-import 'package:kaseapp_ui/configs/bindings/binding.dart';
 import 'package:kaseapp_ui/controllers/middleware/get_middle_ware.dart';
 import 'package:kaseapp_ui/views/account_view.dart';
 import 'package:kaseapp_ui/views/home_view.dart';
 import 'package:kaseapp_ui/views/login_view.dart';
 import 'package:kaseapp_ui/views/main_view.dart';
 import 'package:kaseapp_ui/views/market_view.dart';
+import 'package:kaseapp_ui/views/pre_order_front_view.dart';
 import 'package:kaseapp_ui/views/pre_order_view.dart';
 import 'package:kaseapp_ui/views/receive_preorder_view.dart';
 import 'package:kaseapp_ui/views/register_view.dart';
@@ -17,6 +17,7 @@ import 'package:kaseapp_ui/views/upgraderole_view.dart';
 import 'package:kaseapp_ui/views/farmer_request_view.dart';
 import 'package:kaseapp_ui/views/vendor_receive_order_view.dart';
 import 'package:kaseapp_ui/views/vendor_request_view.dart';
+import 'package:kaseapp_ui/widgets/vendorpreorderview.dart';
 
 
 class AppRoutes {
@@ -38,7 +39,9 @@ class AppRoutes {
 
   // vendor role
   static const String vendorOrders = '/vendor-orders';
+  static const String preOrderFrontView = '/pre-order/frontview';
   static const String vendorProducts = '/vendor-products';
+  static const String vendorFilterStatus = '/vendor-filter-status';
 
   // Upgrade role
   static const String upgradeRole = '/upgrade-role';
@@ -54,12 +57,11 @@ static List<GetPage> generateRoutes = [
   GetPage(
     name: '/',
     page: () => const MainView(),
-    binding: RootBinding(),
     middlewares: [AuthMiddleware()],
   ),
 
   // Auth routes
-  GetPage(name: splash, page: () => const SplashScreenView()),
+  GetPage(name: splash, page: () => SplashScreenView()),
   GetPage(name: login, page: () => LoginView()),
   GetPage(name: register, page: () => RegisterTestView()),
   GetPage(name: marketView, page: ()=>MarketView()),
@@ -75,7 +77,7 @@ static List<GetPage> generateRoutes = [
   ),
   GetPage(
     name: account,
-    page: () => const AccountView(),
+    page: () => AccountView(),
     middlewares: [AuthMiddleware()],
   ),
 
@@ -90,6 +92,11 @@ static List<GetPage> generateRoutes = [
     page: () => const PreOrderRequestView(),
     middlewares: [AuthMiddleware(roleGuard: ['vendor'])],
   ),
+  GetPage(
+    name: preOrderFrontView, 
+    page: ()=>const PreOrderFrontView(),
+    middlewares: [AuthMiddleware(roleGuard: ['vendor'])]
+    ),
 
   GetPage(
     name: orderRespond,
@@ -97,12 +104,18 @@ static List<GetPage> generateRoutes = [
     middlewares: [AuthMiddleware()],
   ),
 
+
   //**
   // Authenticated Routes
   // */
   GetPage(
     name: SummaryView,
     page: () => NotificationSummaryView(),
+    middlewares: [AuthMiddleware()],
+  ),
+  GetPage(
+    name: vendorFilterStatus,
+    page: () => const VendorPreOrderView(),
     middlewares: [AuthMiddleware()],
   ),
   

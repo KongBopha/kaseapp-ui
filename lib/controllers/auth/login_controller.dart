@@ -10,7 +10,6 @@ import 'package:kaseapp_ui/models/user_model.dart';
 import 'package:kaseapp_ui/repositories/login_repository.dart';
 import 'package:kaseapp_ui/utils/dialogs/dialogs.dart';
 import 'package:kaseapp_ui/utils/error/failure.dart';
-import 'package:kaseapp_ui/views/home_view.dart';
 import 'package:kaseapp_ui/views/main_view.dart';
 
 class LoginController extends GetxController{
@@ -51,31 +50,31 @@ class LoginController extends GetxController{
                // Handle login success
             final response = success as Map<String, dynamic>;
 
-            if (response.containsKey('access_token')) {
-              final token = response['access_token'];
-              final user = UserModel.fromJson(response['user']);
+              if (response.containsKey('access_token')) {
+                final token = response['access_token'];
+                final user = UserModel.fromJson(response['user']);
 
-              _secureStorage.writeData(key: 'token', value: token);
-              _secureStorage.writeData(key: 'user', value: jsonEncode(response['user']));
+                 _secureStorage.writeData(key: 'token', value: token);
+                 _secureStorage.writeData(key: 'user', value: jsonEncode(response['user']));
 
-              auth.setAuthenticated(true);
-              userController.setUser(user);
+                auth.setAuthenticated(true);
+                userController.setUser(user);
 
-              Get.snackbar(
-                "Welcome back",
-                "Welcome back ${user.firstName}!",
-                snackPosition: SnackPosition.TOP,
-                backgroundColor: Colors.green.withOpacity(0.8),
-                colorText: Colors.white,
-                duration: const Duration(seconds: 3),
-              );
+                Get.snackbar(
+                  "Welcome back",
+                  "Welcome back ${user.firstName}!",
+                  snackPosition: SnackPosition.TOP,
+                  backgroundColor: Colors.green.withOpacity(0.8),
+                  colorText: Colors.white,
+                  duration: const Duration(seconds: 2),
+                );
 
-              // Navigate to HomePage
-              Navigator.of(context!).pushAndRemoveUntil(
-                MaterialPageRoute(builder: (context) => const MainView()),
-                (Route<dynamic> route) => false,
-              );
-            }
+                // Use Get.offAll for smooth navigation
+                Future.delayed(const Duration(milliseconds: 500), () {
+                  Get.offAll(() => const MainView());
+                });
+              }
+
           }
         );
 

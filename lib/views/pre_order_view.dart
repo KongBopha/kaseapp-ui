@@ -1,12 +1,16 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:flutter_typeahead/flutter_typeahead.dart';
 import 'package:kaseapp_ui/configs/themes/app_theme.dart';
 import 'package:kaseapp_ui/controllers/pre_order_controller.dart';
 import 'package:kaseapp_ui/controllers/product_controller.dart';
+import 'package:kaseapp_ui/controllers/user_controller.dart';
 import 'package:kaseapp_ui/models/pre_order_model.dart';
+import 'package:kaseapp_ui/utils/constants/app_image.dart';
+import 'package:kaseapp_ui/utils/constants/base_api.dart';
 import 'package:kaseapp_ui/utils/pre_order_enum.dart';
 import 'package:kaseapp_ui/widgets/app_bar/my_app_bar.dart';
-import 'package:kaseapp_ui/widgets/custom_drop_down_button.dart';
+
 class PreOrderRequestView extends StatefulWidget {
   const PreOrderRequestView({super.key});
 
@@ -20,22 +24,29 @@ class _PreOrderRequestViewState extends State<PreOrderRequestView> {
   final TextEditingController _deliveryDateController = TextEditingController();
   final TextEditingController _notesController = TextEditingController();
   final TextEditingController _recurringScheduleController = TextEditingController();
+  final TextEditingController _searchController = TextEditingController();
 
   final PreOrderController _preOrderController = Get.find<PreOrderController>();
-  
-  
   late final ProductController _productController;
 
+  String? selectedProductId;
+  Map<String, dynamic>? selectedProduct; // Store display details (id, name, image)
 
-  String? selectedProduct;
   DateTime selectedDeliveryDate = DateTime.now();
+
+  // Helper to get correct product image URL
+  String getProductImageUrl(String? productImageUrl) {
+    if (productImageUrl == null || productImageUrl.isEmpty) return AppImage.orderIcon;
+
+    if (productImageUrl.startsWith("http")) return productImageUrl;
+    final cleanPath = productImageUrl.replaceAll(RegExp(r'^/storage/product_images/'), '');
+    return '${Constants.mainUrl}/storage/product_images/$cleanPath';
+  }
 
   @override
   void initState() {
     super.initState();
-    
     _productController = Get.find<ProductController>();
-    _productController.fetchProductbyname();
   }
 
   @override
@@ -54,39 +65,86 @@ class _PreOrderRequestViewState extends State<PreOrderRequestView> {
                 _buildHeader(),
                 const SizedBox(height: 24),
 
-                Text('Product Details', style: TextStyle(
-                  color: AppTheme.pageTitleColor,
-                  fontSize: 18,
-                  fontWeight: FontWeight.w600,
-                )),
+                Text(
+                  'Product Details',
+                  style: TextStyle(
+                    color: AppTheme.pageTitleColor,
+                    fontSize: 18,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
                 const SizedBox(height: 16),
 
-                // Reactive Dropdown
-                Obx(() {
-                  final products = _productController.products;
-                  if (products.isEmpty) {
-                    return const Center(child: CircularProgressIndicator());
-                  }
-
-                  return CustomDropDownButtonFormField<String>(
-                    hintText: 'Select Product',
-                    value: selectedProduct,
-                    items: [
-                      for (var product in products)
-                        DropdownMenuItem(
-                          value: product.id.toString(),
-                          child: Text(product.name),
+                // Autocomplete Search
+                  Obx(() => Stack(
+                    children: [
+                      TypeAheadField<Map<String, dynamic>>(
+                         builder: (context, controller, focusNode) {
+                          return TextField(
+                            controller: controller,
+                            focusNode: focusNode,
+                            decoration: InputDecoration(
+                              labelText: 'Search Product',
+                              hintText: 'Type to search products',
+                              border: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(10),
+                              ),
+                            ),
+                          );
+                        },
+                        suggestionsCallback: (pattern) async {
+                          if (pattern.isEmpty) return [];
+                          await _productController.fetchProductsByQuery(pattern);
+                          return _productController.products.map((p) => {
+                                'id': p.id.toString(),
+                                'name': p.name,
+                                'image': p.image != null ? getProductImageUrl(p.image) : null,
+                              }).toList();
+                        },
+                        itemBuilder: (context, suggestion) {
+                          return ListTile(
+                            leading: suggestion['image'] != null
+                                ? Image.network(
+                                    suggestion['image'],
+                                    width: 50,
+                                    height: 50,
+                                    errorBuilder: (context, error, stackTrace) =>
+                                        const Icon(Icons.image),
+                                  )
+                                : const Icon(Icons.image),
+                            title: Text(suggestion['name']),
+                          );
+                        },
+                        onSelected: (suggestion) {
+                          setState(() {
+                            selectedProductId = suggestion['id'];
+                            selectedProduct = suggestion;
+                            _searchController.text = suggestion['name'];
+                          });
+                        },
+                        emptyBuilder: (context) => const Padding(
+                          padding: EdgeInsets.all(8.0),
+                          child: Text('No products found'),
+                        ),
+                      ),
+                      if (_productController.isLoading.value)
+                        const Positioned(
+                          right: 10,
+                          top: 15,
+                          child: SizedBox(
+                            width: 20,
+                            height: 20,
+                            child: CircularProgressIndicator(strokeWidth: 2),
+                          ),
                         ),
                     ],
-                    onChanged: (value) => setState(() => selectedProduct = value),
-                    validator: (value) {
-                      if (value == null || value.isEmpty) {
-                        return 'Please select a product';
-                      }
-                      return null;
-                    },
-                  );
-                }),
+                  )),
+
+
+                const SizedBox(height: 20),
+
+                // Selected Product Card
+                if (selectedProduct != null) _buildSelectedProductCard(selectedProduct!),
 
                 const SizedBox(height: 20),
 
@@ -129,6 +187,11 @@ class _PreOrderRequestViewState extends State<PreOrderRequestView> {
                     return null;
                   },
                 ),
+                const SizedBox(height: 20),
+                TextFormField(
+                  
+                ),
+
                 // Recurring Schedule
                 TextFormField(
                   controller: _recurringScheduleController,
@@ -185,14 +248,16 @@ class _PreOrderRequestViewState extends State<PreOrderRequestView> {
     );
   }
 
-Widget _buildHeader() {
-  return Container(
-    width: double.infinity,
-    padding: const EdgeInsets.all(16.0),
+  Widget _buildHeader() {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(16.0),
       decoration: BoxDecoration(
+        // ignore: deprecated_member_use
         color: AppTheme.appbarBackgroundColor.withOpacity(0.1),
         borderRadius: BorderRadius.circular(12),
         border: Border.all(
+          // ignore: deprecated_member_use
           color: AppTheme.appbarBackgroundColor.withOpacity(0.2),
         ),
       ),
@@ -229,7 +294,63 @@ Widget _buildHeader() {
       ),
     );
   }
-  
+
+  Widget _buildSelectedProductCard(Map<String, dynamic> product) {
+    return Container(
+      padding: const EdgeInsets.all(12.0),
+      margin: const EdgeInsets.symmetric(vertical: 8.0),
+      decoration: BoxDecoration(
+        border: Border.all(
+          color: AppTheme.btnNormalColor,
+          width: 2.0,
+        ),
+        borderRadius: BorderRadius.circular(10),
+        color: Colors.white,
+        boxShadow: [
+          BoxShadow(
+            // ignore: deprecated_member_use
+            color: Colors.grey.withOpacity(0.2),
+            spreadRadius: 1,
+            blurRadius: 5,
+            offset: Offset(0, 2),
+          ),
+        ],
+      ),
+      child: Row(
+        children: [
+          product['image'] != null
+              ? ClipRRect(
+                  borderRadius: BorderRadius.circular(8),
+                  child: Image.network(
+                    product['image'],
+                    width: 60,
+                    height: 60,
+                    fit: BoxFit.cover,
+                    errorBuilder: (context, error, stackTrace) => Icon(Icons.image, size: 60),
+                  ),
+                )
+              : Icon(Icons.image, size: 60),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Text(
+              product['name'],
+              style: TextStyle(
+                fontSize: 16,
+                fontWeight: FontWeight.w500,
+                color: AppTheme.pageTitleColor,
+              ),
+            ),
+          ),
+          Icon(
+            Icons.check_circle,
+            color: AppTheme.btnNormalColor,
+            size: 24,
+          ),
+        ],
+      ),
+    );
+  }
+
   Future<void> _selectDeliveryDate(BuildContext context) async {
     final DateTime? picked = await showDatePicker(
       context: context,
@@ -247,97 +368,54 @@ Widget _buildHeader() {
         );
       },
     );
-    
+
     if (picked != null && picked != selectedDeliveryDate) {
       setState(() {
         selectedDeliveryDate = picked;
-        _deliveryDateController.text = 
-          "${picked.day.toString().padLeft(2, '0')}/${picked.month.toString().padLeft(2, '0')}/${picked.year}";
+        _deliveryDateController.text =
+            "${picked.day.toString().padLeft(2, '0')}/${picked.month.toString().padLeft(2, '0')}/${picked.year}";
       });
     }
   }
-  
-void _submitForm() async {
-  if (_formKey.currentState!.validate()) {
-    if (_preOrderController.products.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Products are still loading, please wait...'),
-          backgroundColor: Colors.orange,
-        ),
-      );
-      return;
-    }
 
-    if (selectedProduct == null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Please select a product'),
-          backgroundColor: Colors.red,
-        ),
-      );
-      return;
-    }
-
-    final product = _preOrderController.products.firstWhere(
-      (p) => p.id.toString() == selectedProduct,
-      orElse: () => throw Exception('Product not found'),
-    );
-
-    final preOrderModel = PreOrder(
-      id: null,
-      userId: _preOrderController.userController.user.id!,
-      productId: product.id,
-      qty: double.parse(_quantityController.text),
-      location: "Default Location",
-      deliveryDate: selectedDeliveryDate,
-      noteText: _notesController.text.isNotEmpty ? _notesController.text : null,
-      status: PreOrderStatus.pending,
-      cropId: null,
-      recurringSchedule: _recurringScheduleController.text.isNotEmpty
-          ? _recurringScheduleController.text
-          : null,
-    );
-
-    final result = await _preOrderController.preOrderRepo.createPreOrder(
-      model: preOrderModel,
-      userId: _preOrderController.userController.user.id!,
-      product: product,
-    );
-
-    result.fold(
-      (failure) {
+  void _submitForm() async {
+    if (_formKey.currentState!.validate()) {
+      if (selectedProductId == null) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Error: ${failure.message}'),
+          const SnackBar(
+            content: Text('Please select a product'),
             backgroundColor: Colors.red,
           ),
         );
-      },
-      (success) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Pre-order created successfully!'),
-            backgroundColor: Colors.green,
-          ),
-        );
+        return;
+      }
 
-        // Navigate back
-        Future.delayed(const Duration(seconds: 1), () {
-          Navigator.pop(context);
-        });
-      },
-    );
+      final preOrderModel = PreOrder(
+        id: null,
+        userId: _preOrderController.userController.user.id!,
+        productId: int.parse(selectedProductId!),
+        qty: double.parse(_quantityController.text),
+        location: "Default Location",
+        deliveryDate: selectedDeliveryDate,
+        noteText: _notesController.text.isNotEmpty ? _notesController.text : null,
+        status: PreOrderStatus.pending,
+        cropId: null,
+        recurringSchedule: _recurringScheduleController.text.isNotEmpty
+            ? _recurringScheduleController.text
+            : null,
+      );
+
+      await _preOrderController.createPreOrder(model: preOrderModel);
+    }
   }
-}
 
-  
   @override
   void dispose() {
     _quantityController.dispose();
     _deliveryDateController.dispose();
     _notesController.dispose();
+    _recurringScheduleController.dispose();
+    _searchController.dispose();
     super.dispose();
   }
 }
-

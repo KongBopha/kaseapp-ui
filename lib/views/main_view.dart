@@ -15,7 +15,7 @@ class _MainViewState extends State<MainView> {
 
   final body = [
     const HomePage(),
-    const AccountView(),
+    AccountView(),
   ];
 
   @override

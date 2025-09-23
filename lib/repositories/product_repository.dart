@@ -6,11 +6,11 @@ import '../utils/error/failure.dart';
 class ProductRepository { 
   final ApiHelper _apiHelper = ApiHelper();
 
-  Future<Either<Failure, List<Product>>> fetchProductsByName() async {
+  Future<Either<Failure, List<Product>>> fetchProductsByQuery(String query) async {
     try {
-      final response = await _apiHelper.getPublic(endpoint: '/auth/get-products/byname');
-      print('Raw Product API Response: $response');
-
+      final response = await _apiHelper.getPublic(
+        endpoint: '/auth/products',
+        queryParameters: query.isNotEmpty ? {'q': query} : {},);      
 
       if (response is Map<String, dynamic> && response.containsKey('data')) {
         final dataList = (response['data'] as List?) ?? [];
@@ -18,8 +18,9 @@ class ProductRepository {
             .map((e) => Product.fromJson(e as Map<String, dynamic>))
             .toList();
 
-        print('=== Product API Response ===');
-        print('Fetched products: ${products.length}');
+          print('=== Product API Response ===');
+          print(response);
+
 
         return Right(products);
       } else {

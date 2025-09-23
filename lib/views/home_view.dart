@@ -20,8 +20,14 @@ class _HomePageState extends State<HomePage> {
   final NotificationController _notificationController = Get.find();
 
   void initState() {
-    super.initState();
-  _notificationController.fetchNotifications();
+   super.initState();
+    _initData();
+  }
+
+  Future<void> _initData() async {
+     if (!_authController.auth) return;
+
+     await _notificationController.fetchNotifications();
   }
 
   void _handleRestrictedNav({

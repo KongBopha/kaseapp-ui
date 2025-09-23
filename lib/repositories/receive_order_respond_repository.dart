@@ -15,6 +15,22 @@ class ReceiveOrderRespondRepository {
       endpoint: '/order-details/listing',
       queryParameters: {'page':page.toString()},);
   } 
+  Future<Map<String, dynamic>> filterOrderDetails({
+    required int page,
+    String? offerStatus, 
+  }) async {
+    try {
+      return await _apiHelper.get(
+        endpoint: '/filter/order-details',
+        queryParameters: {
+          'page': page.toString(),
+          if (offerStatus != null) 'offer_status': offerStatus,
+        },
+      );
+    } catch (e) {
+      throw ServerFailure(message: e.toString());
+    }
+  }
 
   // update confirm/reject to farmer
   Future<void>vendorStatus({required int orderDetail_id, required OrderDetailsEnum status})async{

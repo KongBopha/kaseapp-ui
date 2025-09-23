@@ -31,7 +31,20 @@ extension PreOrderStatusExtension on PreOrderStatus {
       case 'cancelled':
         return PreOrderStatus.cancelled;
       default:
-        return PreOrderStatus.pending; // fallback
+        return PreOrderStatus.pending;  
+    }
+  }
+    String get label {
+    switch (this) {
+      case PreOrderStatus.pending:
+        return 'Pending';
+      case PreOrderStatus.partiallyFulfilled:
+        return 'Partially Fulfilled';
+      case PreOrderStatus.fulfilled:
+        return 'Fulfilled';
+      case PreOrderStatus.cancelled:
+        return 'Cancelled';
     }
   }
 }
+

@@ -1,64 +1,101 @@
 import 'package:get/get.dart';
+import 'package:kaseapp_ui/controllers/middleware/auth_controller.dart';
 import 'package:kaseapp_ui/controllers/middleware/resettable_controller.dart';
 import 'package:kaseapp_ui/controllers/user_controller.dart';
 import 'package:kaseapp_ui/models/order_detail_model.dart';
+import 'package:kaseapp_ui/models/preorder_listing.dart';
+import 'package:kaseapp_ui/models/receiveorder_listing.dart';
 import 'package:kaseapp_ui/models/receiveorder_model.dart';
 import 'package:kaseapp_ui/repositories/order_detail_repository.dart';
 import 'package:kaseapp_ui/repositories/receive_order_repository .dart';
+import 'package:kaseapp_ui/repositories/receive_order_respond_repository.dart';
 import 'package:kaseapp_ui/utils/order_details_enum.dart';
 
-class ReceiveOrderController extends GetxController implements ResettableController {
+class ReceiveOrderController extends GetxController
+    implements ResettableController {
   final ReceiveOrderRepository repo;
   final OrderDetailRepository orderDetailRepository;
+  final ReceiveOrderRespondRepository respondRepository;
   final UserController userController = Get.find();
+  final AuthController _authController = Get.find();
 
 
-  ReceiveOrderController({required this.repo,required this.orderDetailRepository});
+  ReceiveOrderController({
+    required this.repo,
+    required this.orderDetailRepository,
+    required this.respondRepository,
+  });
 
-  var receiveOrders = <ReceiveorderModel>[].obs;
+  var allOrders = <ReceivePreorderViewModel>[].obs;
   var isLoading = false.obs;
   var currentPage = 1.obs;
   var lastPage = 1.obs;
+  var selectedStatus = OrderDetailsEnum.pending.obs;
 
-  @override
-  void onInit() {
-    fetchReceiveOrders();
-    super.onInit();
+  Future<void> changeStatus(OrderDetailsEnum? status) async {
+    selectedStatus.value = status ?? OrderDetailsEnum.pending;
+    reset();
+    await fetchOrders();
+
   }
 
-  Future<void> fetchReceiveOrders({bool loadMore = false}) async {
-    if (isLoading.value) return; 
-    if (loadMore && currentPage.value > lastPage.value) return;
+  
+   
+  @override
+  void reset() {
+    allOrders.clear();
+    currentPage.value = 1;
+    lastPage.value = 1;
+  }
+
+  bool get canLoadMore => currentPage.value < lastPage.value;
+
+  Future<void> fetchOrders({bool loadMore = false}) async {
+    if (!_authController.auth) return;
+    
+    if (isLoading.value) return;
+    if (loadMore && !canLoadMore) return;
 
     isLoading.value = true;
-
     final pageToFetch = loadMore ? currentPage.value + 1 : 1;
 
     try {
-      final response = await repo.getReceiveOrders(page: pageToFetch);
+      List<ReceivePreorderViewModel> orders = [];
+      late Map<String, dynamic> response;
 
-      // Parse data array
-      final data = response['data'] as List<dynamic>;
-      final orders = data
-          .map((json) => ReceiveorderModel.fromJson(json as Map<String, dynamic>))
-          .toList();
-
-      // Pagination info
-      final meta = response['meta'] as Map<String, dynamic>? ?? {};
-      lastPage.value = meta['last_page'] != null
-          ? (meta['last_page'] as num).toInt()
-          : 1;
-      currentPage.value = meta['current_page'] != null
-          ? (meta['current_page'] as num).toInt()
-          : 1;
+      if (selectedStatus.value == OrderDetailsEnum.pending) {
+        response = await repo.getReceiveOrders(page: pageToFetch);
+        final data = response['data'] as List<dynamic>;
+        orders = data
+            .map((e) => ReceivePreorderViewModel.fromPreOrderListing(
+                PreOrderListing.fromJson(e)))
+            .toList();
+      } else {
+        response = await respondRepository.filterOrderDetails(
+          page: pageToFetch,
+          offerStatus: selectedStatus.value.value,
+        );
+        final data = response['data'] as List<dynamic>;
+        orders = data
+            .map((e) =>
+                ReceivePreorderViewModel.fromReceiveOrder(ReceiveorderModel.fromJson(e)))
+            .toList();
+      }
 
       if (loadMore) {
-        receiveOrders.addAll(orders);
+        for (var order in orders) {
+          final index =
+              allOrders.indexWhere((o) => o.preOrderId == order.preOrderId);
+          if (index == -1) allOrders.add(order);
+        }
         currentPage.value++;
       } else {
-        receiveOrders.assignAll(orders);
+        allOrders.assignAll(orders);
         currentPage.value = 1;
       }
+
+      final meta = response['meta'] as Map<String, dynamic>? ?? {};
+      lastPage.value = (meta['last_page'] as num?)?.toInt() ?? 1;
     } catch (e) {
       Get.snackbar('Error', e.toString());
     } finally {
@@ -66,9 +103,8 @@ class ReceiveOrderController extends GetxController implements ResettableControl
     }
   }
 
-  bool get canLoadMore => currentPage.value < lastPage.value;
-    Future<void> respondToPreOrder({
-    required ReceiveorderModel preOrder,
+  Future<bool> respondToPreOrder({
+    required ReceivePreorderViewModel order,
     required OrderDetailsEnum offerStatus,
     required int fulfilledQty,
     String? description,
@@ -76,10 +112,9 @@ class ReceiveOrderController extends GetxController implements ResettableControl
     try {
       isLoading.value = true;
 
-      // Create OrderDetailModel
       final orderDetail = OrderDetailModel(
-        pre_order_id: preOrder.preOrderId,
-        farm_id:userController.user.id!,
+        pre_order_id: order.preOrderId,
+        farm_id: userController.user.id!,
         fulfilled_qty: fulfilledQty,
         offer_status: offerStatus,
         description: description,
@@ -88,38 +123,39 @@ class ReceiveOrderController extends GetxController implements ResettableControl
       final result = await orderDetailRepository.submitOrderDetail(
         orderDetail: orderDetail,
         userId: orderDetail.farm_id,
-        preOrderId: preOrder.preOrderId,
+        preOrderId: order.preOrderId,
       );
 
+      bool isSuccess = false;
+
       result.fold(
-        (failure) => Get.snackbar('Error', failure.message),
+        (failure) {
+          Get.snackbar('Error', failure.message);
+          isSuccess = false;
+        },
         (createdOrder) {
-          // Update UI: mark this pre-order as responded
-          final index = receiveOrders.indexWhere(
-              (element) => element.preOrderId == preOrder.preOrderId);
+          final index =
+              allOrders.indexWhere((element) => element.preOrderId == order.preOrderId);
           if (index != -1) {
-            receiveOrders[index] = receiveOrders[index].copyWith(
-              status: offerStatus == OrderDetailsEnum.accepted
-                  ? 'Accepted'
-                  : 'Rejected',
+            allOrders[index] = allOrders[index].copyWith(
+              offerStatus: offerStatus.value,
+              fulfilledQty: fulfilledQty.toDouble(),
+              note: description,
             );
           }
           Get.snackbar('Success', 'Response submitted successfully');
+          isSuccess = true;
         },
       );
-    }catch (e, s) {    
-    print('RespondToPreOrder Error: $e');
-    print(s);
-    Get.snackbar('Error', e.toString());
-  } finally {
+
+      return isSuccess;
+    } catch (e, s) {
+      print('RespondToPreOrder Error: $e');
+      print(s);
+      Get.snackbar('Error', e.toString());
+      return false;
+    } finally {
       isLoading.value = false;
     }
   }
-  
-  @override
-  void reset() {
-    receiveOrders.clear();
-    isLoading.value = false;
-    print("ReceiveOrderController has been reset");
- } 
 }

@@ -1,35 +1,24 @@
 import 'package:flutter/material.dart';
-import 'package:kaseapp_ui/configs/Routes/routes.dart';
-import 'package:kaseapp_ui/configs/routes/routes.dart';
+import 'package:get/get.dart';
 import 'package:kaseapp_ui/controllers/auth/logout_controller.dart';
+import 'package:kaseapp_ui/controllers/user_controller.dart';
 import 'package:kaseapp_ui/utils/constants/app_image.dart';
 import 'package:kaseapp_ui/utils/constants/base_api.dart';
-import 'package:kaseapp_ui/utils/constants/base_api.dart';
-import 'package:kaseapp_ui/controllers/auth/login_controller.dart';
-import 'package:kaseapp_ui/controllers/user_controller.dart';
 import 'package:kaseapp_ui/widgets/app_bar/my_app_bar.dart';
-import 'package:get/get.dart';
 
-class AccountView extends StatefulWidget {
-  const AccountView({super.key});
-
-  @override
-  State<AccountView> createState() => _AccountViewState();
-}
-
-class _AccountViewState extends State<AccountView> {
-  final Color actionButtonColor = Colors.black87;
-  final double actionButtonSize = 27;
+class AccountView extends StatelessWidget {
+  AccountView({Key? key}) : super(key: key);
 
   final UserController _userController = Get.find();
-  final LogoutController logoutController = Get.put(LogoutController());
+  final LogoutController _logoutController = Get.put(LogoutController());
 
-  // Helper to get correct profile image URL
+  // Helper to get profile image URL
   String getProfileImageUrl(String? profileUrl) {
     if (profileUrl == null || profileUrl.isEmpty) return AppImage.userProfile;
 
     if (profileUrl.startsWith("http")) return profileUrl;
-    final cleanPath = profileUrl.replaceAll(RegExp(r'^/storage/profile_photos/'), '');
+    final cleanPath =
+        profileUrl.replaceAll(RegExp(r'^/storage/profile_photos/'), '');
     return '${Constants.mainUrl}/storage/profile_photos/$cleanPath';
   }
 
@@ -44,77 +33,73 @@ class _AccountViewState extends State<AccountView> {
         actions: [
           IconButton(
             onPressed: () {},
-            icon: Icon(
-              Icons.language,
-              color: actionButtonColor,
-              size: actionButtonSize,
-            ),
+            icon: const Icon(Icons.language, color: Colors.black87, size: 27),
           ),
           const SizedBox(width: 10),
         ],
       ),
       body: SingleChildScrollView(
-        scrollDirection: Axis.vertical,
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
+            // Profile section
             Container(
               width: size.width,
               padding: const EdgeInsets.all(25),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.center,
-                mainAxisAlignment: MainAxisAlignment.center,
                 children: [
                   Obx(
                     () => Material(
                       borderRadius: BorderRadius.circular(50),
                       child: Padding(
                         padding: const EdgeInsets.all(2.0),
-                          child: CircleAvatar(
-                            radius: size.height * 0.06,
-                            backgroundImage: _userController.user.profileUrl == null ||
-                                    _userController.user.profileUrl!.isEmpty
-                                ? const AssetImage(AppImage.userProfile) as ImageProvider
-                                : NetworkImage(getProfileImageUrl(_userController.user.profileUrl)),
-                            key: ValueKey(_userController.user.profileUrl ?? "default"),
-                          ),
-
+                        child: CircleAvatar(
+                          radius: size.height * 0.06,
+                          backgroundImage:
+                              _userController.user.profileUrl == null ||
+                                      _userController
+                                          .user.profileUrl!.isEmpty
+                                  ? const AssetImage(AppImage.userProfile)
+                                      as ImageProvider
+                                  : NetworkImage(getProfileImageUrl(
+                                      _userController.user.profileUrl)),
+                          key: ValueKey(
+                              _userController.user.profileUrl ?? "default"),
+                        ),
                       ),
                     ),
                   ),
+                  const SizedBox(height: 12),
                   Obx(
                     () => Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
                       crossAxisAlignment: CrossAxisAlignment.center,
                       children: [
                         Text(
                           _userController.user.firstName != null
-                              ? "${_userController.user.firstName} ${_userController.user.lastName}"
+                              ? "${_userController.user.firstName} ${_userController.user.lastName ?? ''}"
                               : "No Username".tr,
                           style: const TextStyle(
-                            fontSize: 28,
-                            fontWeight: FontWeight.w500,
-                          ),
+                              fontSize: 28, fontWeight: FontWeight.w500),
                         ),
-                        Text(_userController.user.role),
-                        const SizedBox(width: 10),
+                        const SizedBox(height: 4),
+                        Text(
+                          _userController.user.role,
+                          style: const TextStyle(
+                              fontSize: 16, color: Colors.black54),
+                        ),
                       ],
                     ),
                   ),
                 ],
               ),
             ),
-            Feature(
-              title: "User information".tr,
-              showIcon: true,
-            ),
             const SizedBox(height: 10),
-            Feature(
-              title: "Accepted Order",
-              showIcon: true,
-            ),
+            Feature(title: "User information".tr, showIcon: true),
+            const SizedBox(height: 10),
+            Feature(title: "Accepted Order", showIcon: true),
             const Padding(
-              padding: EdgeInsets.only(left: 20.0, top: 10, bottom: 20),
+              padding: EdgeInsets.only(left: 20, top: 10, bottom: 20),
               child: Text(
                 "connect with other services",
                 style: TextStyle(color: Colors.black45),
@@ -126,14 +111,17 @@ class _AccountViewState extends State<AccountView> {
             const SizedBox(height: 10),
             const Feature(title: "Address", showIcon: false),
             const SizedBox(height: 10),
-            if (_userController.user.firstName != null)
-              Feature(
-                title: "Log Out".tr,
-                showIcon: false,
-                onTap: () {
-                  logoutController.logout();
-                },
-              ),
+            Obx(
+              () => _userController.user.firstName != null
+                  ? Feature(
+                      title: "Log Out".tr,
+                      showIcon: false,
+                      onTap: () {
+                        _logoutController.logoutWithConfirmation();
+                      },
+                    )
+                  : const SizedBox.shrink(),
+            ),
           ],
         ),
       ),
@@ -141,24 +129,20 @@ class _AccountViewState extends State<AccountView> {
   }
 }
 
-
 class Feature extends StatelessWidget {
-  const Feature({
-    super.key,
-    required this.title,
-    required this.showIcon,
-    this.onTap,
-  });
+  const Feature(
+      {Key? key, required this.title, required this.showIcon, this.onTap})
+      : super(key: key);
 
   final String title;
   final bool showIcon;
-  final Function()? onTap;
+  final VoidCallback? onTap;
 
   @override
   Widget build(BuildContext context) {
     final size = MediaQuery.of(context).size;
     return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 20),
+      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 5),
       child: InkWell(
         onTap: onTap,
         child: Container(
@@ -171,19 +155,10 @@ class Feature extends StatelessWidget {
           child: Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Text(
-                title,
-                style: const TextStyle(
-                  fontSize: 16.0,
-                  // fontWeight: FontWeight.w500,
-                ),
-              ),
+              Text(title, style: const TextStyle(fontSize: 16)),
               if (showIcon)
-                const Icon(
-                  Icons.arrow_forward_ios_outlined,
-                  size: 16,
-                  color: Colors.grey,
-                ),
+                const Icon(Icons.arrow_forward_ios_outlined,
+                    size: 16, color: Colors.grey),
             ],
           ),
         ),

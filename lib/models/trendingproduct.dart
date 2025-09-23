@@ -1,15 +1,26 @@
-import 'package:kaseapp_ui/models/product.dart';
-
 class TrendingProduct {
-  final Product product;
-  final double demandKg;
-  final double supplyKg;
-  final String demandStatus;
+  final int productId;
+  final int preOrderCount;
+  final String productName;
+  final String productImage;
+  final String unit;
 
   TrendingProduct({
-    required this.product,
-    required this.demandKg,
-    required this.supplyKg,
-    required this.demandStatus,
+    required this.productId,
+    required this.preOrderCount,
+    required this.productName,
+    required this.productImage,
+    required this.unit,
   });
+
+  factory TrendingProduct.fromJson(Map<String, dynamic> json) {
+    final product = json['product'] ?? {};
+    return TrendingProduct(
+      productId: json['product_id'],
+      preOrderCount: json['pre_order_count'],
+      productName: product['name'] ?? '',
+      productImage: product['image'] ?? '',
+      unit: product['unit'] ?? '',
+    );
+  }
 }

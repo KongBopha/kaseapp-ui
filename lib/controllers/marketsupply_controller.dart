@@ -3,6 +3,7 @@ import 'package:kaseapp_ui/controllers/middleware/auth_controller.dart';
 import 'package:kaseapp_ui/controllers/middleware/resettable_controller.dart';
 import 'package:kaseapp_ui/controllers/user_controller.dart';
 import 'package:kaseapp_ui/models/market_supplies.dart';
+import 'package:kaseapp_ui/models/trendingproduct.dart';
 import 'package:kaseapp_ui/repositories/market_supply_repositories.dart';
 class MarketsupplyController extends GetxController implements ResettableController{
 
@@ -14,6 +15,8 @@ class MarketsupplyController extends GetxController implements ResettableControl
 
   var market_supplies = <MarketSupplies>[].obs;
   var isLoading = false.obs;
+  var trendingProducts = <TrendingProduct>[].obs;
+
 
   // fetch data market supply
 
@@ -29,6 +32,17 @@ class MarketsupplyController extends GetxController implements ResettableControl
     
     isLoading.value = false;
 
+  }
+  Future<void> fetchTrendingProducts() async {
+    isLoading.value = true;
+    final result = await marketSupplyRepositories.fetchTrendingProducts();
+
+    result.fold(
+      (failure) => Get.snackbar('Error', failure.message),
+      (products) => trendingProducts.assignAll(products),
+    );
+
+    isLoading.value = false;
   }
     @override
   void reset() {

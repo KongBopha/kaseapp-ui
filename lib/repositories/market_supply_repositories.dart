@@ -1,4 +1,5 @@
 import 'package:kaseapp_ui/models/market_supplies.dart';
+import 'package:kaseapp_ui/models/trendingproduct.dart';
 import 'package:kaseapp_ui/utils/error/failure.dart';
 import 'package:kaseapp_ui/utils/helper/api_helper.dart';
 import 'package:dartz/dartz.dart';
@@ -30,4 +31,23 @@ class MarketSupplyRepositories {
       return Left(ServerFailure(message: e.toString()));
     }
   }
+  Future<Either<Failure, List<TrendingProduct>>> fetchTrendingProducts() async {
+    try {
+      final response = await _apiHelper.get(endpoint: '/auth/market-trend/listing');
+      if (response.containsKey('data')) {
+        final dataList = (response['data'] as List?) ?? [];
+        final trendingList = dataList
+            .map((e) => TrendingProduct.fromJson(e as Map<String, dynamic>))
+            .toList();
+        return Right(trendingList);
+      } else {
+        return Left(ServerFailure(message: 'Invalid API response format: $response'));
+      }
+    } on Failure catch (e) {
+      return Left(e);
+    } catch (e) {
+      return Left(ServerFailure(message: e.toString()));
+    }
+  }
+  
 }

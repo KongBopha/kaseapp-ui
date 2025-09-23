@@ -3,103 +3,81 @@ import 'package:get/get.dart';
 import 'package:kaseapp_ui/models/farm_model.dart';
 import 'package:kaseapp_ui/models/user_model.dart';
 import 'package:kaseapp_ui/models/vendor_model.dart';
+import 'package:kaseapp_ui/repositories/auth_repository.dart';
 import 'package:kaseapp_ui/repositories/user_repository.dart';
 import 'package:kaseapp_ui/utils/dialogs/dialogs.dart';
-import 'package:kaseapp_ui/utils/error/failure.dart';
 import 'package:kaseapp_ui/controllers/middleware/auth_controller.dart';
 
 class UserController extends GetxController {
   final UserRepository _userRepository = UserRepository();
 
-  RxBool loading = false.obs;
   final Rx<UserModel> _user = UserModel(role: 'consumer').obs;
-  final Rx<UserModel> _owner = UserModel().obs;
+  final Rx<UserModel?> otherUser = Rx<UserModel?>(null); // other profile
+  RxBool loading = false.obs;
 
   UserModel get user => _user.value;
-  UserModel get owner => _owner.value;
-  bool get isLoading => loading.value;
+  Rx<UserModel> get userRx => _user;
 
+  /// Set user and print debug
   void setUser(UserModel userModel) {
     _user.value = userModel;
+    print("[UserController] setUser: ${userModel.toJson()}");
   }
 
   void clearUser() {
     _user.value = UserModel(role: 'consumer');
+    print("[UserController] clearUser -> consumer");
   }
 
-  /// Fetch other user's detail by id (owner)
-  Future<void> getUserById(int id) async {
-    loading.value = true;
-    final response = await _userRepository.getUser(id);
-
-    response.fold(
-      (failure) {
-        loading.value = false;
-        final context = Get.context;
-        if (failure is NoInternetConnection) {
-          ErrorDialog.showErrorDialog(
-            context!,
-            title: ' ${'Internet Connection'.tr}',
-            content: ' ${'No Internet Connection'.tr}',
-          );
-        } else {
-          Get.snackbar('Error', failure.message);
-        }
-      },
-      (response) {
-        loading.value = false;
-        final data = response['data'];
-        _owner.value = UserModel.fromJson(data);
-      },
-    );
+  /// Update role locally and persist storage
+  Future<void> updateRole(String newRole) async {
+    _user.update((val) {
+      if (val != null) val.role = newRole;
+    });
+    print("[UserController] updateRole: $newRole");
+    await Get.find<AuthController>().persistUser(_user.value);
   }
 
   /// Update profile (image example)
   Future<void> updateProfile(File image) async {
     loading.value = true;
+    print("[UserController] updateProfile called");
     final response = await _userRepository.updateProfile(image);
 
     response.fold(
       (failure) {
         loading.value = false;
+        print("[UserController] updateProfile failed: ${failure.message}");
         final context = Get.context;
-        if (failure is NoInternetConnection) {
-          ErrorDialog.showErrorDialog(
-            context!,
-            title: ' ${'Internet Connection'.tr}',
-            content: ' ${'No Internet Connection'.tr}',
-          );
-        } else {
-          ErrorDialog.showErrorDialog(
-            context!,
-            title: 'Update profile error',
-            content: ' ${failure.message}'.tr,
-          );
-        }
+        ErrorDialog.showErrorDialog(
+          context!,
+          title: 'Update profile error',
+          content: '${failure.message}'.tr,
+        );
       },
       (success) async {
         loading.value = false;
         final updatedUser = UserModel.fromJson(success);
         _user.value = updatedUser;
+        print("[UserController] updateProfile success: ${updatedUser.toJson()}");
 
-        // update persistent storage via AuthController
+        // persist updated user
         await Get.find<AuthController>().persistUser(updatedUser);
       },
     );
   }
-  // fetch user info
 
-
-  /// Upgrade the current authenticated user to Farmer.
+  /// Upgrade to Farmer
   Future<void> upgradeToFarmer({
     required String name,
-    required String? address,
-    required String? about,
-    required String? cover,
-    required String? logo,
-
+    String? address,
+    String? about,
+    String? cover,
+    String? logo,
   }) async {
     loading.value = true;
+    print("[UserController] upgradeToFarmer called: $name");
+
     final response = await _userRepository.upgradeToFarmer(
       name: name,
       address: address,
@@ -111,20 +89,13 @@ class UserController extends GetxController {
     response.fold(
       (failure) {
         loading.value = false;
+        print("[UserController] upgradeToFarmer failed: ${failure.message}");
         final context = Get.context;
-        if (failure is NoInternetConnection) {
-          ErrorDialog.showErrorDialog(
-            context!,
-            title: ' ${'Internet Connection'.tr}',
-            content: ' ${'No Internet Connection'.tr}',
-          );
-        } else {
-          ErrorDialog.showErrorDialog(
-            context!,
-            title: 'Upgrade to farmer error',
-            content: ' ${failure.message}'.tr,
-          );
-        }
+        ErrorDialog.showErrorDialog(
+          context!,
+          title: 'Upgrade to farmer error',
+          content: '${failure.message}'.tr,
+        );
       },
       (success) async {
         loading.value = false;
@@ -138,14 +109,14 @@ class UserController extends GetxController {
         }
 
         _user.value = updatedUser;
+        print("[UserController] upgradeToFarmer success: ${updatedUser.toJson()}");
 
-        // persist changed user in secure storage via AuthController
         await Get.find<AuthController>().persistUser(updatedUser);
       },
     );
   }
 
-  /// Upgrade to vendor 
+  /// Upgrade to Vendor
   Future<void> upgradeToVendor({
     required String name,
     required String address,
@@ -153,6 +124,8 @@ class UserController extends GetxController {
     required String vendorType,
   }) async {
     loading.value = true;
+    print("[UserController] upgradeToVendor called: $name");
+
     final response = await _userRepository.upgradeToVendor(
       name: name,
       address: address,
@@ -163,20 +136,13 @@ class UserController extends GetxController {
     response.fold(
       (failure) {
         loading.value = false;
+        print("[UserController] upgradeToVendor failed: ${failure.message}");
         final context = Get.context;
-        if (failure is NoInternetConnection) {
-          ErrorDialog.showErrorDialog(
-            context!,
-            title: ' ${'Internet Connection'.tr}',
-            content: ' ${'No Internet Connection'.tr}',
-          );
-        } else {
-          ErrorDialog.showErrorDialog(
-            context!,
-            title: 'Upgrade to vendor error',
-            content: ' ${failure.message}'.tr,
-          );
-        }
+        ErrorDialog.showErrorDialog(
+          context!,
+          title: 'Upgrade to vendor error',
+          content: '${failure.message}'.tr,
+        );
       },
       (success) async {
         loading.value = false;
@@ -190,17 +156,25 @@ class UserController extends GetxController {
         }
 
         _user.value = updatedUser;
+        print("[UserController] upgradeToVendor success: ${updatedUser.toJson()}");
+
         await Get.find<AuthController>().persistUser(updatedUser);
       },
     );
   }
+  Future<void> fetchOtherUserProfile(int userId) async {
+    loading.value = true;
+    try {
+      final profile = await _userRepository.viewProfile(userId: userId);
+      otherUser.value = profile;
 
-  /// Update role locally and persist storage
-  Future<void> updateRole(String newRole) async {
-    _user.update((val) {
-      if (val != null) val.role = newRole;
-    });
-
-    await Get.find<AuthController>().persistUser(_user.value);
+      if (profile != null) {
+        print('Fetched user: ${profile.firstName}');
+        if (profile.vendor != null) print('Vendor: ${profile.vendor?.companyName}');
+        if (profile.farm != null) print('Farm: ${profile.farm?.name}');
+      }
+    } finally {
+      loading.value = false;
+    }
   }
 }

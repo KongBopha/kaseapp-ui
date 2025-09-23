@@ -26,7 +26,7 @@ class ReceiveOrderCard extends StatelessWidget {
             const SizedBox(height: 4),
             Text('From ${preOrder.vendorName}', style: TextStyle(color: AppTheme.itemSubTitleColor)),
             const SizedBox(height: 8),
-            Text('Quantity: ${preOrder.quantity}kg',
+            Text('Quantity: ${preOrder.fulfilledQty}kg',
                 style: TextStyle(color: Colors.green, fontWeight: FontWeight.w600)),
             const SizedBox(height: 4),
             Text('Delivery: ${_formatDate(preOrder.deliveryDate)}',
@@ -41,10 +41,10 @@ class ReceiveOrderCard extends StatelessWidget {
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
               decoration: BoxDecoration(
-                color: _getStatusColor(preOrder.status),
+                color: _getStatusColor(preOrder.offerStatus),
                 borderRadius: BorderRadius.circular(16),
               ),
-              child: Text(preOrder.status.toLowerCase(),
+              child: Text(preOrder.offerStatus.toLowerCase(),
                   style: const TextStyle(color: Colors.white, fontSize: 12)),
             ),
           ],

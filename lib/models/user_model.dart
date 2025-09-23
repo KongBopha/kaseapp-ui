@@ -29,19 +29,29 @@ class UserModel {
   final DateTime? updatedAt;
 
 
-  factory UserModel.fromJson(Map<String, dynamic> json) => UserModel(
-        id: json["id"],
-        firstName: json["first_name"],
-        lastName: json["last_name"],
-        profileUrl: json["profile_url"],
-        role: json['role'] ?? 'consumer',
-        farm: json['farm'] != null ? FarmModel.fromJson(json['farm']) : null,
-        vendor: json['vendor'] != null ? VendorModel.fromJson(json['vendor']) : null,
-        email: json["email"],
-        phone: json["phone"],
-        createdAt: DateTime.parse(json["created_at"]),
-        updatedAt: DateTime.parse(json["updated_at"]),
-      );
+factory UserModel.fromJson(Map<String, dynamic> json) => UserModel(
+      id: json["id"] ?? 0,
+      firstName: json["first_name"] ?? '',
+      lastName: json["last_name"] ?? '',
+      profileUrl: json["profile_url"] ?? '',
+      role: json['role'] ?? 'consumer',
+      farm: json['farm'] != null ? FarmModel.fromJson(json['farm']) : null,
+      vendor: json['vendor'] != null ? VendorModel.fromJson(json['vendor']) : null,
+      email: json["email"] ?? '',
+      phone: json["phone"] ?? '',
+      // userType: json["user_type"] ?? '',  
+      // address: json["address"] ?? '',     
+      // emailVerifiedAt: json["email_verified_at"] != null
+      //     ? DateTime.tryParse(json["email_verified_at"])
+      //     : null, // NEW: handle nullable date
+      createdAt: json["created_at"] != null
+          ? DateTime.parse(json["created_at"])
+          : DateTime.now(),
+      updatedAt: json["updated_at"] != null
+          ? DateTime.parse(json["updated_at"])
+          : DateTime.now(),
+    );
+
 
   Map<String, dynamic> toJson() => {
         "id": id,

@@ -12,6 +12,7 @@ class VendorFrontView extends StatefulWidget {
 }
 
 class _VendorFrontViewState extends State<VendorFrontView> {
+  
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -91,27 +92,27 @@ class _VendorFrontViewState extends State<VendorFrontView> {
                       icon: Icons.add_shopping_cart,
                       color: Colors.green,  
                       onTap: () {
-                        Get.toNamed(AppRoutes.vendorOrders);
+                        Get.toNamed(AppRoutes.preOrderFrontView);
                       },
                     ),
                     _buildFeatureCard(
                       context: context,
                       title: 'Order History',
-                      subtitle: 'Track completed and past orders',
+                      subtitle: 'View your past orders',
                       icon: Icons.history,
                       color: AppTheme.btnNormalColor,
                       onTap: () {
-                        // Get.toNamed('/my${AppRoutes.orderSubHistoryView}');
+                       Get.toNamed(AppRoutes.vendorFilterStatus);
                       },
                     ),
                     _buildFeatureCard(
                       context: context,
                       title: 'Receive Orders',
-                      subtitle: 'View and accept incoming orders',
+                      subtitle: 'View and accept incoming orders',// confirm/reject orders
                       icon: Icons.inventory_2_outlined,
                       color: Colors.orange, // Retained original color
                       onTap: () {
-                        Get.toNamed('/my${AppRoutes.orderRespond}');
+                        Get.toNamed(AppRoutes.orderRespond);
                       },
                     ),
                   ],

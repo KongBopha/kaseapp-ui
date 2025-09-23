@@ -1,4 +1,5 @@
 import 'package:get/get.dart';
+import 'package:kaseapp_ui/controllers/middleware/auth_controller.dart';
 import 'package:kaseapp_ui/models/notification_model.dart';
 import 'package:kaseapp_ui/models/notification_summary.dart';
 import 'package:kaseapp_ui/repositories/notification_repository.dart';
@@ -6,6 +7,7 @@ import 'middleware/resettable_controller.dart';
 
 class NotificationController extends GetxController implements ResettableController {
   final NotificationRepository _notificationRepository;
+  final AuthController _authController = Get.find();
 
   NotificationController(this._notificationRepository);
 
@@ -23,6 +25,8 @@ class NotificationController extends GetxController implements ResettableControl
   }
 
   Future<void> fetchNotifications() async {
+    if (!_authController.auth) return; // wait for auth
+
     try {
       loading.value = true;
       final result = await _notificationRepository.getNotifications();
@@ -35,7 +39,10 @@ class NotificationController extends GetxController implements ResettableControl
     }
   }
 
+  /// Fetch all grouped notifications
   Future<void> fetchAllNotifications() async {
+    if (!_authController.auth) return; // wait for auth
+
     try {
       loading.value = true;
       final result = await _notificationRepository.getAllNotifications();
@@ -45,8 +52,10 @@ class NotificationController extends GetxController implements ResettableControl
     }
   }
 
+  /// Mark a notification as read
   Future<void> markAsRead(int id) async {
-    notifications.assignAll(notifications.map((n) => n.id == id ? n.copyWith(isRead: true) : n).toList());
+    notifications.assignAll(notifications.map((n) =>
+        n.id == id ? n.copyWith(isRead: true) : n).toList());
     count.value = (count.value > 0) ? count.value - 1 : 0;
     await _notificationRepository.markAsRead(id);
   }

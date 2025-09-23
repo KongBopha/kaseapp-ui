@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:kaseapp_ui/configs/Routes/routes.dart';
+import 'package:kaseapp_ui/controllers/middleware/auth_controller.dart';
 import 'package:kaseapp_ui/controllers/notification_controller.dart';
-import 'package:kaseapp_ui/controllers/user_controller.dart';
 
 class NotificationSummaryView extends StatefulWidget {
   @override
@@ -12,22 +12,31 @@ class NotificationSummaryView extends StatefulWidget {
 
 class _NotificationSummaryViewState extends State<NotificationSummaryView> {
   final NotificationController controller = Get.find();
-  final UserController userController = Get.find();
+  final AuthController authController = Get.find();
 
   @override
   void initState() {
     super.initState();
-    controller.fetchAllNotifications();
+    _initNotifications();
+  }
+
+  Future<void> _initNotifications() async {
+    if (!authController.auth) return;
+    await controller.fetchAllNotifications();
   }
 
   void _viewAll() {
-    final role = userController.user.role.toLowerCase();
-    if (role == 'farmer') {
-      Get.toNamed(AppRoutes.retriveOrder);
-    } else if (role == 'vendor') {
-      Get.toNamed(AppRoutes.orderRespond);
-    } else {
-      Get.snackbar('Info', 'No listing available for your role');
+    final role = authController.role.toLowerCase();
+
+    switch (role) {
+      case 'farmer':
+        Get.toNamed(AppRoutes.retriveOrder);
+        break;
+      case 'vendor':
+        Get.toNamed(AppRoutes.orderRespond);
+        break;
+      default:
+        Get.snackbar('Info', 'No listing available for your role');
     }
   }
 
@@ -85,7 +94,8 @@ class _NotificationSummaryViewState extends State<NotificationSummaryView> {
                   title: Text(
                     notif.message,
                     style: TextStyle(
-                      fontWeight: isUnread ? FontWeight.bold : FontWeight.normal,
+                      fontWeight:
+                          isUnread ? FontWeight.bold : FontWeight.normal,
                     ),
                   ),
                   subtitle: Text(
