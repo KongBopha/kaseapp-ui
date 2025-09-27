@@ -6,11 +6,11 @@ import 'package:kaseapp_ui/models/receiveorder_model.dart';
 import 'package:kaseapp_ui/repositories/order_detail_repository.dart';
 import 'package:kaseapp_ui/utils/order_details_enum.dart';
 
-class ReceiveOrderController extends GetxController implements ResettableController {
+class OrderDetailController extends GetxController implements ResettableController {
   final OrderDetailRepository orderDetailRepository;
   final UserController userController = Get.find();
 
-  ReceiveOrderController({required this.orderDetailRepository}); 
+  OrderDetailController({required this.orderDetailRepository}); 
 
   var receiveOrders = <ReceiveorderModel>[].obs;
   var isLoading = false.obs;
@@ -46,7 +46,7 @@ class ReceiveOrderController extends GetxController implements ResettableControl
       result.fold(
         (failure) => Get.snackbar('Error', failure.message),
         (submittedOrder) {
-          preOrder.status = offerStatus == OrderDetailsEnum.accepted ? 'Accepted' : 'Rejected';
+          preOrder.offerStatus = offerStatus == OrderDetailsEnum.accepted ? 'Accepted' : 'Rejected';
           receiveOrders.refresh();
           Get.snackbar('Success', 'Response submitted successfully');
         },

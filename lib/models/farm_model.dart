@@ -1,17 +1,17 @@
 class FarmModel {
   final int id;
-  final int owner_id; // link to user table
+  final int ? owner_id; // link to user table
   final String name;
   final String? address;
   final String? about;
   final bool status;
   final String? cover;
-  final String? logo;
+  final String? logo; 
 
  
   FarmModel({
     required this.id,
-    required this.owner_id,
+    this.owner_id,
     required this.name,
     this.address,
     this.about,
@@ -26,7 +26,7 @@ class FarmModel {
     name: json['name'],
     address: json['address']??'',
     about: json['about']??'',
-    status: json['status']??false,
+    status: json['status'] == true || json['status'] == 1,
     cover: json['cover']??'',
     logo: json['logo']??'',
   );

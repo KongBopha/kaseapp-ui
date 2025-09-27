@@ -2,8 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:kaseapp_ui/controllers/middleware/auth_controller.dart';
 import 'package:kaseapp_ui/configs/routes/routes.dart';
-import 'package:kaseapp_ui/controllers/notification_controller.dart';
-import 'package:kaseapp_ui/controllers/pre_order_controller.dart';
 
 class SplashScreenView extends StatefulWidget {
   const SplashScreenView({super.key});
@@ -13,22 +11,22 @@ class SplashScreenView extends StatefulWidget {
 }
 
 class _SplashViewState extends State<SplashScreenView> {
+  final AuthController authController = Get.find<AuthController>();
+
   @override
   void initState() {
     super.initState();
-    _initApp();
+    _startApp();
   }
 
-  Future<void> _initApp() async {
-    final authController = Get.find<AuthController>();
-
-    // Restore auth state
+  Future<void> _startApp() async {
+    // Wait until storage is loaded
     await authController.hydrateFromStorage();
 
     // Small delay for splash effect
     await Future.delayed(const Duration(seconds: 2));
 
-    // Navigate based on auth
+    print('Auth after storage/API: ${authController.auth}');
     if (authController.auth) {
       Get.offAllNamed(AppRoutes.mainView);
     } else {
@@ -38,12 +36,12 @@ class _SplashViewState extends State<SplashScreenView> {
 
   @override
   Widget build(BuildContext context) {
-    return const Scaffold(
+    return  Scaffold(
       body: Center(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            FlutterLogo(size: 100),
+            Image.asset('lib/assets/app_logo.png',height: 80, width: 80,),
             SizedBox(height: 20),
             CircularProgressIndicator(),
           ],

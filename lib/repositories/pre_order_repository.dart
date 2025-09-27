@@ -1,5 +1,6 @@
 import 'package:dartz/dartz.dart';
 import 'package:kaseapp_ui/models/pre_order_model.dart';
+import 'package:kaseapp_ui/models/preorder_vendor_listing.dart';
 import 'package:kaseapp_ui/utils/helper/api_helper.dart';
 import '../utils/error/failure.dart';
 import '../models/product.dart';
@@ -41,23 +42,43 @@ class PreOrderRepository {
     }
   }
 
-  // // Fetch all pre-orders
-  // Future<Either<Failure, List<ReceiveorderModel>>> getPreOrders() async {
-  //   try {
-  //     // API call returns Map<String, dynamic>
-  //     final response = await _apiHelper.get(endpoint: '/pre-order/listing');
+  // Fetch all pre-orders
+  Future<Map<String, dynamic>> getPreOrders({
+    int page = 1,
+    String? search,
+    String? timeFilter, // 'today', 'this_week', 'next_week' or null for all
+  }) async {
+    try {
+      final queryParams = <String, dynamic>{
+        'page': page.toString(),
+        if (search != null && search.isNotEmpty) 'search': search,
+        if (timeFilter != null && timeFilter.isNotEmpty) 'time_filter': timeFilter,
+      };
 
-  //     // Extract the 'data' array
-  //     final List<dynamic> orderJson = response['data'] ?? [];
+      final response = await _apiHelper.get(
+        endpoint: '/pre-orders/list-item',
+        queryParameters: queryParams,
+      );
 
-  //     // Map each JSON object to PreOrder model
-  //     final orders = orderJson
-  //         .map((json) => ReceiveorderModel.fromJson(json as Map<String, dynamic>))
-  //         .toList();
+      print("API response: $response"); // Debug
 
-  //     return Right(orders);
-  //   } on Failure catch (e) {
-  //     return Left(e);
-  //   }
-  // }
+      final dataList = (response['data']['data'] as List?) ?? [];
+
+      final orders = dataList
+          .map((json) => PreOrderListItem.fromJson(json as Map<String, dynamic>))
+          .toList();
+
+      final currentPage = int.tryParse(response['data']['current_page'].toString()) ?? 1;
+      final lastPage = int.tryParse(response['data']['last_page'].toString()) ?? 1;
+
+      return {
+        'orders': orders,
+        'current_page': currentPage,
+        'last_page': lastPage,
+      };
+    } catch (e) {
+      print("Error fetching pre-orders: $e");
+      rethrow;
+    }
+  }
 }

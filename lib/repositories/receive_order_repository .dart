@@ -1,12 +1,25 @@
+import 'package:kaseapp_ui/utils/error/failure.dart';
 import 'package:kaseapp_ui/utils/helper/api_helper.dart';
 
 class ReceiveOrderRepository {
   final ApiHelper _apiHelper = ApiHelper();
 
-  Future<Map<String, dynamic>> getReceiveOrders({required int page}) async {
-    return await _apiHelper.get(
-      endpoint: '/pre-order/listing',
-      queryParameters: {'page': page.toString()},
-    );
+  Future<Map<String, dynamic>> getReceiveOrders({
+    required int page,
+    String? status, 
+  }) async {
+    try {
+      final queryParams = {'page': page.toString()};
+      if (status != null && status != 'all') {
+        queryParams['status'] = status;
+      }
+      return await _apiHelper.get(
+        endpoint: '/pre-order/listing',
+        queryParameters: queryParams,
+      );
+      
+    } catch (e) {
+      throw ServerFailure(message: e.toString());
+    }
   }
 }

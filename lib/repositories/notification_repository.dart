@@ -25,7 +25,7 @@ class NotificationRepository {
   Future<List<NotificationSummary>> getAllNotifications() async {
     final response = await _apiHelper.get(endpoint: '/notifications');
 
-   // print("API response: $response"); // Debug
+   print("API response: $response"); // Debug
 
     final dataList = (response['data'] as List?) ?? [];
    // print("Data list length: ${dataList.length}"); // Debug

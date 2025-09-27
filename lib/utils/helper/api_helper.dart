@@ -1,3 +1,4 @@
+
 import 'dart:io';
 import 'package:kaseapp_ui/controllers/middleware/auth_controller.dart';
 import 'package:kaseapp_ui/controllers/middleware/secure_storage.dart';
@@ -46,7 +47,7 @@ class ApiHelper {
   }) async {
     try {
       final token = await _secureStorage.readData(key: 'token');
-      final response = await _aHttpClient.getAPI(
+      final response = await _aHttpClient.getAPI( 
         Constants.baseUrl + endpoint,
         queryParameters: queryParameters,
         options: AOptions(headers: _headers(token)),
@@ -84,11 +85,11 @@ class ApiHelper {
       return response.data;
     }
 
-    throw ServerFailure(
-      message: response.message.isNotEmpty
-          ? response.message
-          : "Unexpected error occurred",
-    );
+    // throw ServerFailure(
+    //   message: response.message.isNotEmpty
+    //       ? response.message
+    //       : "Unexpected error occurred" ?? '',
+    // );
   }
 
 

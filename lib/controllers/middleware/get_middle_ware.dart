@@ -1,5 +1,6 @@
 import 'package:flutter/widgets.dart';
 import 'package:get/get.dart';
+import 'package:kaseapp_ui/configs/Routes/routes.dart';
 import './auth_controller.dart';
 
 
@@ -14,10 +15,12 @@ class AuthMiddleware extends GetMiddleware {
   RouteSettings? redirect(String? route) {
     final authController = Get.find<AuthController>();
     if (!authController.auth) return const RouteSettings(name: '/login');
+    print('Auth after get middleware/API: ${authController.auth}');
+
     if (roleGuard != null && !roleGuard!.contains(authController.role)) {
-      return const RouteSettings(name: '/upgrade-role');
+      return const RouteSettings(name: AppRoutes.mainView);
     }
-    return null;
+    return null;  
   }
 }
 
