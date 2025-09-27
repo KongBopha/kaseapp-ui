@@ -30,7 +30,7 @@ class UserModel {
 
 
 factory UserModel.fromJson(Map<String, dynamic> json) => UserModel(
-      id: json["id"] ?? 0,
+      id: (json["id"] as num?)?.toInt() ?? 0,
       firstName: json["first_name"] ?? '',
       lastName: json["last_name"] ?? '',
       profileUrl: json["profile_url"] ?? '',
@@ -39,18 +39,14 @@ factory UserModel.fromJson(Map<String, dynamic> json) => UserModel(
       vendor: json['vendor'] != null ? VendorModel.fromJson(json['vendor']) : null,
       email: json["email"] ?? '',
       phone: json["phone"] ?? '',
-      // userType: json["user_type"] ?? '',  
-      // address: json["address"] ?? '',     
-      // emailVerifiedAt: json["email_verified_at"] != null
-      //     ? DateTime.tryParse(json["email_verified_at"])
-      //     : null, // NEW: handle nullable date
       createdAt: json["created_at"] != null
-          ? DateTime.parse(json["created_at"])
+          ? DateTime.tryParse(json["created_at"]) ?? DateTime.now()
           : DateTime.now(),
       updatedAt: json["updated_at"] != null
-          ? DateTime.parse(json["updated_at"])
+          ? DateTime.tryParse(json["updated_at"]) ?? DateTime.now()
           : DateTime.now(),
     );
+
 
 
   Map<String, dynamic> toJson() => {

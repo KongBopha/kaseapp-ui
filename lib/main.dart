@@ -29,11 +29,10 @@ import 'package:kaseapp_ui/configs/routes/routes.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
-
+ 
   // -----------------------------
   // Global Repositories
-  // -----------------------------
-  Get.put(ApiHelper());
+   Get.put(ApiHelper()); 
   Get.put(SecureStorage());
   Get.put(AuthRepository(Get.find<ApiHelper>(), Get.find<SecureStorage>()));
   Get.put(ProductRepository());

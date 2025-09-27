@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:kaseapp_ui/controllers/receive_order_respond_controller.dart';
+import 'package:kaseapp_ui/controllers/user_controller.dart';
 import 'package:kaseapp_ui/models/vendor_receive_preorder_model.dart';
 import 'package:kaseapp_ui/utils/order_details_enum.dart';
 import 'package:kaseapp_ui/configs/themes/app_theme.dart';
+import 'package:kaseapp_ui/widgets/otherprofile.dart';
 
 class VendorReceiveOrderView extends StatefulWidget {
   const VendorReceiveOrderView({super.key});
@@ -112,7 +114,7 @@ class _VendorReceiveOrderViewState extends State<VendorReceiveOrderView>
         padding: const EdgeInsets.all(16),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
+          children: [ 
             // Product & Farm
             Text(preOrder.productName,
                 style: TextStyle(
@@ -120,9 +122,25 @@ class _VendorReceiveOrderViewState extends State<VendorReceiveOrderView>
                     fontWeight: FontWeight.bold,
                     color: AppTheme.itemTitleColor)),
             const SizedBox(height: 4),
-            Text('From ${preOrder.farmName}',
-                style: TextStyle(color: AppTheme.itemSubTitleColor)),
-            const SizedBox(height: 8),
+              GestureDetector(
+                onTap: () async {
+                  final userController = Get.find<UserController>();
+                   await userController.fetchOtherUserProfile(preOrder.userId);
+
+                  if (userController.otherUser.value != null) {
+                    Get.to(() => OtherProfileScreen(user: userController.otherUser.value!));
+                  } else {
+                    Get.snackbar('Error', 'Farmer not found');
+                  }
+                },
+                child: Text(
+                  'From ${preOrder.farmName}',
+                  style: TextStyle(
+                    color: AppTheme.itemSubTitleColor,
+                    decoration: TextDecoration.underline,  
+                  ),
+                ),
+              ),
 
             // Fulfilled Quantity
             Text('Quantity offered: ${preOrder.fulfilledQty} kg',

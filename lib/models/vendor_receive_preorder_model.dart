@@ -2,6 +2,7 @@ import 'package:kaseapp_ui/utils/order_details_enum.dart';
 
 class VendorReceivePreorderModel {
   final int preOrderId;
+  final int userId;  
   final int orderDetailId;  
   final String farmName;      
   final String productName;
@@ -14,6 +15,7 @@ class VendorReceivePreorderModel {
 
   VendorReceivePreorderModel({
     required this.preOrderId,
+    required this.userId,   
     required this.orderDetailId,
     required this.farmName,
     required this.productName,
@@ -28,6 +30,7 @@ class VendorReceivePreorderModel {
   factory VendorReceivePreorderModel.fromJson(Map<String, dynamic> json) {
     return VendorReceivePreorderModel(
       preOrderId: json['pre_order_id'] != null ? (json['pre_order_id'] as num).toInt() : 0,
+      userId: (json['user_id'] as num?)?.toInt() ?? 0,   
       orderDetailId: json['order_detail_id'] != null ? (json['order_detail_id'] as num).toInt() : 0,
       farmName: json['vendorName'] as String? ?? 'Unknown',  
       productName: json['product_name'] as String,
@@ -46,6 +49,7 @@ class VendorReceivePreorderModel {
   Map<String, dynamic> toJson() {
     return {
       'pre_order_id': preOrderId,
+      'user_id': userId,  
       'order_detail_id': orderDetailId,
       'vendorName': farmName,
       'product_name': productName,
@@ -60,6 +64,7 @@ class VendorReceivePreorderModel {
 
   VendorReceivePreorderModel copyWith({
     int? preOrderId,
+    int? userId,
     int? orderDetailId,
     String? farmName,
     String? productName,
@@ -72,6 +77,7 @@ class VendorReceivePreorderModel {
   }) {
     return VendorReceivePreorderModel(
       preOrderId: preOrderId ?? this.preOrderId,
+      userId: userId ?? this.userId,
       orderDetailId: orderDetailId ?? this.orderDetailId,
       farmName: farmName ?? this.farmName,
       productName: productName ?? this.productName,

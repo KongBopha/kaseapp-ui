@@ -1,32 +1,35 @@
 class VendorModel {
-  final int id;
-  final int owner_id;
-  final String companyName;
+  VendorModel({
+    this.id,
+    this.companyName,
+    this.vendorType,
+    this.address,
+    this.about,
+    this.logo,
+  });
+
+  final int? id;
+  final String? companyName;
+  final String? vendorType;
   final String? address;
-  final String? description;
-  final String vendor_type;
+  final String? about;
   final String? logo;
 
-
-  VendorModel({required this.id, required this.companyName,   this.address, this.description, required this.owner_id, required this.vendor_type,   this.logo});
-
   factory VendorModel.fromJson(Map<String, dynamic> json) => VendorModel(
-        id: json['id'],
-        companyName: json['company_name'] ?? json['name'] ?? '',
+        id: (json['id'] as num?)?.toInt() ?? 0,
+        companyName: json['name'] ?? '',
+        vendorType: json['vendor_type'] ?? '',
         address: json['address'] ?? '',
-        description: json['description'] ?? '',
-        owner_id: json['owner_id'],
-        vendor_type: json['vendor_type'] ?? 'retail',
+        about: json['about'] ?? '',
         logo: json['logo'] ?? '',
       );
 
   Map<String, dynamic> toJson() => {
         'id': id,
-        'owner_id': owner_id,
-        'company_name': companyName,
+        'name': companyName,
+        'vendor_type': vendorType,
         'address': address,
-        'description': description,
-        'vendor_type': vendor_type,
+        'about': about,
         'logo': logo,
       };
 }

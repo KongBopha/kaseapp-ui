@@ -15,6 +15,7 @@ class UserRepository {
     try {
       final response = await _apiHelper.get(endpoint: '/showProfile/$userId');
 
+      print("Raw API response: $response");
       if (response['success'] == true && response['data'] != null) {
         return UserModel.fromJson(response['data']);
       }
