@@ -76,10 +76,8 @@ class _VendorPreOrderViewState extends State<VendorPreOrderView>
                 onTap: (index) {
                   final status = PreOrderStatus.values[index];
                   controller.changeStatus(status);
-                  // Provide haptic feedback for better interaction
-                  if (Theme.of(context).platform == TargetPlatform.iOS) {
-                    // Add haptic feedback import if available
-                    // HapticFeedback.selectionClick();
+                   if (Theme.of(context).platform == TargetPlatform.iOS) {
+ 
                   }
                 },
                 isScrollable: true,
@@ -98,8 +96,7 @@ class _VendorPreOrderViewState extends State<VendorPreOrderView>
                   color: AppTheme.APPBAR_COLOR,
                 ),
                 indicatorPadding: const EdgeInsets.symmetric(vertical: 4, horizontal: 6),
-                // Better touch targets - minimum 44x44 points
-                indicatorSize: TabBarIndicatorSize.tab,
+                 indicatorSize: TabBarIndicatorSize.tab,
                 splashBorderRadius: BorderRadius.circular(24),
                 tabs: PreOrderStatus.values.map((status) {
                   IconData icon;

@@ -100,7 +100,7 @@ static List<GetPage> generateRoutes = [
 
   GetPage(
     name: orderRespond,
-    page: () => const VendorReceiveOrderView(),
+    page: () =>  VendorReceiveOrderView(),
     middlewares: [AuthMiddleware()],
   ),
 

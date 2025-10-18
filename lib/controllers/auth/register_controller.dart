@@ -10,6 +10,7 @@ import 'package:kaseapp_ui/repositories/register_repository.dart';
 import 'package:kaseapp_ui/utils/dialogs/dialogs.dart';
 import 'package:kaseapp_ui/utils/error/failure.dart';
 import 'package:kaseapp_ui/views/home_view.dart';
+import 'package:kaseapp_ui/views/main_view.dart';
 
 class RegisterController extends GetxController {
   final AuthController authController = Get.find();
@@ -74,7 +75,7 @@ class RegisterController extends GetxController {
 
       // Navigate to HomePage
       Navigator.of(context!).pushAndRemoveUntil(
-        MaterialPageRoute(builder: (context) => const HomePage()),
+        MaterialPageRoute(builder: (context) => const MainView()),
         (Route<dynamic> route) => false,
       );
     }
