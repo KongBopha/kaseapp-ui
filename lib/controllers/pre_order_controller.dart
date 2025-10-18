@@ -1,3 +1,4 @@
+import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:kaseapp_ui/configs/Routes/routes.dart';
 import 'package:kaseapp_ui/controllers/middleware/auth_controller.dart';
@@ -8,6 +9,7 @@ import 'package:kaseapp_ui/models/pre_order_model.dart';
 import 'package:kaseapp_ui/models/preorder_vendor_listing.dart';
 import 'package:kaseapp_ui/models/product.dart';
 import 'package:kaseapp_ui/repositories/pre_order_repository.dart';
+import 'package:kaseapp_ui/views/vendor_front_view.dart';
 
 class PreOrderController extends GetxController implements ResettableController {
   final PreOrderRepository preOrderRepo;
@@ -40,12 +42,10 @@ class PreOrderController extends GetxController implements ResettableController 
     fetchPreorder(); // fetch initially
   }
 
-  /// Create PreOrder
-  Future<void> createPreOrder({required PreOrder model}) async {
+    /// Create PreOrder
+  Future<bool> createPreOrder({required PreOrder model}) async {
     if (userController.user.id == null) {
-      Get.snackbar('Error', 'User not found');
-      Get.toNamed(AppRoutes.login);
-      return;
+      return false; // User not found, view will handle snackbar
     }
 
     final product = products.firstWhere(
@@ -53,19 +53,27 @@ class PreOrderController extends GetxController implements ResettableController 
       orElse: () => throw Exception('Selected product not found'),
     );
 
-    isLoading.value = true;
-    final result = await preOrderRepo.createPreOrder(
-      model: model,
-      userId: userController.user.id!,
-      product: product,
-    );
+    try {
+      isLoading.value = true;
+      final result = await preOrderRepo.createPreOrder(
+        model: model,
+        userId: userController.user.id!,
+        product: product,
+      );
 
-    result.fold(
-      (failure) => Get.snackbar('Error', failure.message),
-      (success) => print('Pre-order created successfully'),
-    );
-    isLoading.value = false;
+      isLoading.value = false;
+
+      // Return true if success, false if failure
+      return result.fold(
+        (failure) => false,
+        (success) => true,
+      );
+    } catch (e) {
+      isLoading.value = false;
+      return false;
+    }
   }
+
 
   /// Fetch PreOrders with search & time filter
   Future<void> fetchPreorder({
@@ -101,7 +109,39 @@ class PreOrderController extends GetxController implements ResettableController 
       isLoading.value = false;
     }
   }
+    /// PreOrder creation from Market Surplus
+Future<bool> createPreOrderFromSurplus(Map<String, dynamic> data) async {
+  if (userController.user.id == null) return false;
 
+  try {
+    isLoading.value = true;
+
+    final result = await preOrderRepo.createOrderFromMarket(
+      userId: userController.user.id!,
+      farmId: data['farm_id'],
+      productId: data['product_id'],
+      quantity: data['quantity'],
+      unit: data['unit'],
+      marketSupplyId: data['market_supply_id'],
+      note: data['note'], 
+      recurringSchedule: data['recurring_schedule'], 
+      deliveryDate: data['delivery_date'], 
+    );
+
+    isLoading.value = false;
+  return result.fold((failure) {
+    print(" PreOrderFromSurplus Error: ${failure.message}");
+    return false;
+  }, (success) {
+    print(" PreOrderFromSurplus Success: $success");
+    return true;
+  });
+    } catch (e) {
+      isLoading.value = false;
+      print("Error creating pre-order from surplus: $e");
+      return false;
+    }
+  }
 
     /// Jump to a specific page
     Future<void> jumpToPage(int page) async {

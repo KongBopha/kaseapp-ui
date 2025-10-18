@@ -25,7 +25,7 @@ import 'package:kaseapp_ui/repositories/receive_order_respond_repository.dart';
 
 // Helpers & Routes
 import 'package:kaseapp_ui/utils/helper/api_helper.dart';
-import 'package:kaseapp_ui/configs/routes/routes.dart';
+import 'package:kaseapp_ui/configs/routes/routes.dart'; 
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -33,7 +33,7 @@ void main() async {
   // -----------------------------
   // Global Repositories
    Get.put(ApiHelper()); 
-  Get.put(SecureStorage());
+  Get.put(SecureStorage()); 
   Get.put(AuthRepository(Get.find<ApiHelper>(), Get.find<SecureStorage>()));
   Get.put(ProductRepository());
   Get.put(PreOrderRepository());
@@ -44,7 +44,7 @@ void main() async {
   Get.put(ReceiveOrderRespondRepository());
 
   // -----------------------------
-  // Global Controllers
+  // Global Controller
   // -----------------------------
   Get.put(UserController()); // UserController first
   Get.put(AuthController()); // AuthController with dependency injection

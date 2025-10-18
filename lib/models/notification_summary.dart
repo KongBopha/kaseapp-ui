@@ -27,7 +27,10 @@ class NotificationSummary {
     return NotificationSummary(
       preOrderId: json['pre_order_id'] ?? 0,
       product: json['product'],
-      vendor: json['vendor'],
+      vendor: {
+        'user_info': json['vendor']?['user_info'] ?? {},
+        'vendor_info': json['vendor']?['vendor_info'] ?? {},
+      },      
       farm: json['farm'],
       createdAt: parseDate(json['created_at']),
       notifications: notifList

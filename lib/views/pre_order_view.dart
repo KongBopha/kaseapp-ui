@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:get/get.dart';
 import 'package:flutter_typeahead/flutter_typeahead.dart';
 import 'package:kaseapp_ui/configs/themes/app_theme.dart';
@@ -12,7 +13,8 @@ import 'package:kaseapp_ui/utils/pre_order_enum.dart';
 import 'package:kaseapp_ui/widgets/app_bar/my_app_bar.dart';
 
 class PreOrderRequestView extends StatefulWidget {
-  const PreOrderRequestView({super.key});
+  final Map<String, dynamic>? preFilledData;
+  const PreOrderRequestView({Key? key, this.preFilledData}) : super(key: key);
 
   @override
   State<PreOrderRequestView> createState() => _PreOrderRequestViewState();
@@ -30,14 +32,16 @@ class _PreOrderRequestViewState extends State<PreOrderRequestView> {
   late final ProductController _productController;
 
   String? selectedProductId;
-  Map<String, dynamic>? selectedProduct; // Store display details (id, name, image)
-
+  Map<String, dynamic>? selectedProduct;
   DateTime selectedDeliveryDate = DateTime.now();
+  
+  // For keyboard navigation
+  List<Map<String, dynamic>> _currentSuggestions = [];
+  int _highlightedIndex = -1;
+  bool _showSuggestions = false;
 
-  // Helper to get correct product image URL
   String getProductImageUrl(String? productImageUrl) {
     if (productImageUrl == null || productImageUrl.isEmpty) return AppImage.orderIcon;
-
     if (productImageUrl.startsWith("http")) return productImageUrl;
     final cleanPath = productImageUrl.replaceAll(RegExp(r'^/storage/product_images/'), '');
     return '${Constants.mainUrl}/storage/product_images/$cleanPath';
@@ -47,6 +51,30 @@ class _PreOrderRequestViewState extends State<PreOrderRequestView> {
   void initState() {
     super.initState();
     _productController = Get.find<ProductController>();
+
+    if (widget.preFilledData != null) {
+      final data = widget.preFilledData!;
+      setState(() {
+        selectedProductId = data['product_id']?.toString();
+        selectedProduct = {
+          'id': data['product_id']?.toString(),
+          'name': data['product_name'] ?? '',
+          'image': data['product_image'] ?? '',
+        };
+        _quantityController.text = data['available_qty']?.toString() ?? '';
+      });
+    }
+  }
+
+  void _selectProduct(Map<String, dynamic> suggestion) {
+    setState(() {
+      selectedProductId = suggestion['id'];
+      selectedProduct = suggestion;
+      _searchController.text = suggestion['name'];
+      _showSuggestions = false;
+      _highlightedIndex = -1;
+      _currentSuggestions = [];
+    });
   }
 
   @override
@@ -64,7 +92,6 @@ class _PreOrderRequestViewState extends State<PreOrderRequestView> {
               children: [
                 _buildHeader(),
                 const SizedBox(height: 24),
-
                 Text(
                   'Product Details',
                   style: TextStyle(
@@ -74,80 +101,14 @@ class _PreOrderRequestViewState extends State<PreOrderRequestView> {
                   ),
                 ),
                 const SizedBox(height: 16),
-
-                // Autocomplete Search
-                  Obx(() => Stack(
-                    children: [
-                      TypeAheadField<Map<String, dynamic>>(
-                         builder: (context, controller, focusNode) {
-                          return TextField(
-                            controller: controller,
-                            focusNode: focusNode,
-                            decoration: InputDecoration(
-                              labelText: 'Search Product',
-                              hintText: 'Type to search products',
-                              border: OutlineInputBorder(
-                                borderRadius: BorderRadius.circular(10),
-                              ),
-                            ),
-                          );
-                        },
-                        suggestionsCallback: (pattern) async {
-                          if (pattern.isEmpty) return [];
-                          await _productController.fetchProductsByQuery(pattern);
-                          return _productController.products.map((p) => {
-                                'id': p.id.toString(),
-                                'name': p.name,
-                                'image': p.image != null ? getProductImageUrl(p.image) : null,
-                              }).toList();
-                        },
-                        itemBuilder: (context, suggestion) {
-                          return ListTile(
-                            leading: suggestion['image'] != null
-                                ? Image.network(
-                                    suggestion['image'],
-                                    width: 50,
-                                    height: 50,
-                                    errorBuilder: (context, error, stackTrace) =>
-                                        const Icon(Icons.image),
-                                  )
-                                : const Icon(Icons.image),
-                            title: Text(suggestion['name']),
-                          );
-                        },
-                        onSelected: (suggestion) {
-                          setState(() {
-                            selectedProductId = suggestion['id'];
-                            selectedProduct = suggestion;
-                            _searchController.text = suggestion['name'];
-                          });
-                        },
-                        emptyBuilder: (context) => const Padding(
-                          padding: EdgeInsets.all(8.0),
-                          child: Text('No products found'),
-                        ),
-                      ),
-                      if (_productController.isLoading.value)
-                        const Positioned(
-                          right: 10,
-                          top: 15,
-                          child: SizedBox(
-                            width: 20,
-                            height: 20,
-                            child: CircularProgressIndicator(strokeWidth: 2),
-                          ),
-                        ),
-                    ],
-                  )),
-
-
+                
+                // Enhanced Autocomplete with Keyboard Support
+                _buildKeyboardFriendlyAutocomplete(),
+                
                 const SizedBox(height: 20),
-
-                // Selected Product Card
                 if (selectedProduct != null) _buildSelectedProductCard(selectedProduct!),
-
                 const SizedBox(height: 20),
-
+                
                 // Quantity Input
                 TextFormField(
                   controller: _quantityController,
@@ -166,9 +127,8 @@ class _PreOrderRequestViewState extends State<PreOrderRequestView> {
                     return null;
                   },
                 ),
-
                 const SizedBox(height: 20),
-
+                
                 // Delivery Date
                 TextFormField(
                   controller: _deliveryDateController,
@@ -188,10 +148,7 @@ class _PreOrderRequestViewState extends State<PreOrderRequestView> {
                   },
                 ),
                 const SizedBox(height: 20),
-                TextFormField(
-                  
-                ),
-
+                
                 // Recurring Schedule
                 TextFormField(
                   controller: _recurringScheduleController,
@@ -201,9 +158,8 @@ class _PreOrderRequestViewState extends State<PreOrderRequestView> {
                     border: OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
                   ),
                 ),
-
                 const SizedBox(height: 20),
-
+                
                 // Notes
                 TextFormField(
                   controller: _notesController,
@@ -215,9 +171,8 @@ class _PreOrderRequestViewState extends State<PreOrderRequestView> {
                   maxLines: 3,
                   textInputAction: TextInputAction.done,
                 ),
-
                 const SizedBox(height: 32),
-
+                
                 // Submit Button
                 SizedBox(
                   width: double.infinity,
@@ -248,29 +203,192 @@ class _PreOrderRequestViewState extends State<PreOrderRequestView> {
     );
   }
 
+  Widget _buildKeyboardFriendlyAutocomplete() {
+    return Obx(() => Stack(
+          children: [
+            Focus(
+              onKeyEvent: (node, event) {
+                if (event is KeyDownEvent && _showSuggestions && _currentSuggestions.isNotEmpty) {
+                  // Arrow Down
+                  if (event.logicalKey == LogicalKeyboardKey.arrowDown) {
+                    setState(() {
+                      _highlightedIndex = (_highlightedIndex + 1) % _currentSuggestions.length;
+                    });
+                    return KeyEventResult.handled;
+                  }
+                  // Arrow Up
+                  else if (event.logicalKey == LogicalKeyboardKey.arrowUp) {
+                    setState(() {
+                      _highlightedIndex = _highlightedIndex <= 0
+                          ? _currentSuggestions.length - 1
+                          : _highlightedIndex - 1;
+                    });
+                    return KeyEventResult.handled;
+                  }
+                  // Enter or Tab - Select highlighted item
+                  else if (event.logicalKey == LogicalKeyboardKey.enter ||
+                      event.logicalKey == LogicalKeyboardKey.tab) {
+                    if (_highlightedIndex >= 0 && _highlightedIndex < _currentSuggestions.length) {
+                      _selectProduct(_currentSuggestions[_highlightedIndex]);
+                      return KeyEventResult.handled;
+                    }
+                  }
+                  // Escape - Close suggestions
+                  else if (event.logicalKey == LogicalKeyboardKey.escape) {
+                    setState(() {
+                      _showSuggestions = false;
+                      _highlightedIndex = -1;
+                    });
+                    return KeyEventResult.handled;
+                  }
+                }
+                return KeyEventResult.ignored;
+              },
+              child: TypeAheadField<Map<String, dynamic>>(
+                controller: _searchController,
+                builder: (context, controller, focusNode) {
+                  return TextField(
+                    controller: controller,
+                    focusNode: focusNode,
+                    decoration: InputDecoration(
+                      labelText: 'Search Product',
+                      hintText: 'Type to search products',
+                      helperText: 'Use ↑↓ arrows, Tab or Enter to select',
+                      helperStyle: TextStyle(
+                        fontSize: 12,
+                        color: Colors.grey[600],
+                      ),
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(10),
+                      ),
+                      suffixIcon: _searchController.text.isNotEmpty
+                          ? IconButton(
+                              icon: const Icon(Icons.clear),
+                              onPressed: () {
+                                setState(() {
+                                  _searchController.clear();
+                                  selectedProduct = null;
+                                  selectedProductId = null;
+                                  _showSuggestions = false;
+                                  _highlightedIndex = -1;
+                                  _currentSuggestions = [];
+                                });
+                              },
+                            )
+                          : null,
+                    ),
+                    onChanged: (value) {
+                      if (value.isEmpty) {
+                        setState(() {
+                          _showSuggestions = false;
+                          _currentSuggestions = [];
+                          _highlightedIndex = -1;
+                        });
+                      } else {
+                        setState(() {
+                          _showSuggestions = true;
+                          _highlightedIndex = -1;
+                        });
+                      }
+                    },
+                  );
+                },
+                suggestionsCallback: (pattern) async {
+                  if (pattern.isEmpty) {
+                    setState(() {
+                      _currentSuggestions = [];
+                      _highlightedIndex = -1;
+                    });
+                    return [];
+                  }
+                  
+                  await _productController.fetchProductsByQuery(pattern);
+                  
+                  final suggestions = _productController.products
+                      .map((p) => {
+                            'id': p.id.toString(),
+                            'name': p.name,
+                            'image': p.image != null ? getProductImageUrl(p.image) : null,
+                          })
+                      .toList();
+                  
+                  setState(() {
+                    _currentSuggestions = suggestions;
+                    if (suggestions.isNotEmpty && _highlightedIndex == -1) {
+                      _highlightedIndex = 0; // Auto-highlight first item
+                    }
+                  });
+                  
+                  return suggestions;
+                },
+                itemBuilder: (context, suggestion) {
+                  final index = _currentSuggestions.indexOf(suggestion);
+                  final isHighlighted = index == _highlightedIndex;
+                  
+                  return Container(
+                    color: isHighlighted ? AppTheme.btnNormalColor.withOpacity(0.1) : null,
+                    child: ListTile(
+                      leading: suggestion['image'] != null
+                          ? Image.network(
+                              suggestion['image'],
+                              width: 50,
+                              height: 50,
+                              errorBuilder: (context, error, stackTrace) =>
+                                  const Icon(Icons.image),
+                            )
+                          : const Icon(Icons.image),
+                      title: Text(
+                        suggestion['name'],
+                        style: TextStyle(
+                          fontWeight: isHighlighted ? FontWeight.bold : FontWeight.normal,
+                        ),
+                      ),
+                      trailing: isHighlighted
+                          ? Icon(Icons.keyboard_return, 
+                              color: AppTheme.btnNormalColor, 
+                              size: 20)
+                          : null,
+                    ),
+                  );
+                },
+                onSelected: (suggestion) {
+                  _selectProduct(suggestion);
+                },
+                emptyBuilder: (context) => const Padding(
+                  padding: EdgeInsets.all(8.0),
+                  child: Text('No products found'),
+                ),
+              ),
+            ),
+            if (_productController.isLoading.value)
+              const Positioned(
+                right: 10,
+                top: 15,
+                child: SizedBox(
+                  width: 20,
+                  height: 20,
+                  child: CircularProgressIndicator(strokeWidth: 2),
+                ),
+              ),
+          ],
+        ));
+  }
+
   Widget _buildHeader() {
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.all(16.0),
       decoration: BoxDecoration(
-        // ignore: deprecated_member_use
         color: AppTheme.appbarBackgroundColor.withOpacity(0.1),
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(
-          // ignore: deprecated_member_use
-          color: AppTheme.appbarBackgroundColor.withOpacity(0.2),
-        ),
+        border: Border.all(color: AppTheme.appbarBackgroundColor.withOpacity(0.2)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Row(
             children: [
-              Icon(
-                Icons.info_outline_rounded,
-                color: AppTheme.btnNormalColor,
-                size: 20,
-              ),
+              Icon(Icons.info_outline_rounded, color: AppTheme.btnNormalColor, size: 20),
               const SizedBox(width: 8),
               Text(
                 'Create New Pre-order',
@@ -300,15 +418,11 @@ class _PreOrderRequestViewState extends State<PreOrderRequestView> {
       padding: const EdgeInsets.all(12.0),
       margin: const EdgeInsets.symmetric(vertical: 8.0),
       decoration: BoxDecoration(
-        border: Border.all(
-          color: AppTheme.btnNormalColor,
-          width: 2.0,
-        ),
+        border: Border.all(color: AppTheme.btnNormalColor, width: 2.0),
         borderRadius: BorderRadius.circular(10),
         color: Colors.white,
         boxShadow: [
           BoxShadow(
-            // ignore: deprecated_member_use
             color: Colors.grey.withOpacity(0.2),
             spreadRadius: 1,
             blurRadius: 5,
@@ -341,11 +455,7 @@ class _PreOrderRequestViewState extends State<PreOrderRequestView> {
               ),
             ),
           ),
-          Icon(
-            Icons.check_circle,
-            color: AppTheme.btnNormalColor,
-            size: 24,
-          ),
+          Icon(Icons.check_circle, color: AppTheme.btnNormalColor, size: 24),
         ],
       ),
     );
@@ -360,9 +470,7 @@ class _PreOrderRequestViewState extends State<PreOrderRequestView> {
       builder: (BuildContext context, Widget? child) {
         return Theme(
           data: ThemeData.light().copyWith(
-            colorScheme: ColorScheme.light(
-              primary: AppTheme.btnNormalColor,
-            ),
+            colorScheme: ColorScheme.light(primary: AppTheme.btnNormalColor),
           ),
           child: child!,
         );
@@ -379,7 +487,38 @@ class _PreOrderRequestViewState extends State<PreOrderRequestView> {
   }
 
   void _submitForm() async {
-    if (_formKey.currentState!.validate()) {
+    if (!_formKey.currentState!.validate()) return;
+
+    if (widget.preFilledData != null) {
+      final data = {
+        "farm_id": widget.preFilledData!['farm_id'],
+        "product_id": widget.preFilledData!['product_id'],
+        "quantity": double.parse(_quantityController.text),
+        "unit": widget.preFilledData!['unit'],
+        "market_supply_id": widget.preFilledData!['market_supply_id'],
+        "delivery_date": selectedDeliveryDate,
+        if (_notesController.text.isNotEmpty) "note": _notesController.text,
+      };
+
+      final success = await _preOrderController.createPreOrderFromSurplus(data);
+
+      if (success) {
+        Get.snackbar(
+          "Success",
+          "Pre-order request sent successfully",
+          backgroundColor: Colors.green,
+          colorText: Colors.white,
+        );
+        Navigator.pop(context);
+      } else {
+        Get.snackbar(
+          "Error",
+          "Failed to send pre-order request",
+          backgroundColor: Colors.red,
+          colorText: Colors.white,
+        );
+      }
+    } else {
       if (selectedProductId == null) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
@@ -405,8 +544,40 @@ class _PreOrderRequestViewState extends State<PreOrderRequestView> {
             : null,
       );
 
-      await _preOrderController.createPreOrder(model: preOrderModel);
+      final success = await _preOrderController.createPreOrder(model: preOrderModel);
+
+      if (success) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Pre-order created successfully'),
+            backgroundColor: Colors.green,
+          ),
+        );
+        _resetForm();
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Failed to create pre-order'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
     }
+  }
+
+  void _resetForm() {
+    _formKey.currentState!.reset();
+    _quantityController.clear();
+    _notesController.clear();
+    _recurringScheduleController.clear();
+    _searchController.clear();
+    setState(() {
+      selectedProduct = null;
+      selectedProductId = null;
+      _showSuggestions = false;
+      _highlightedIndex = -1;
+      _currentSuggestions = [];
+    });
   }
 
   @override

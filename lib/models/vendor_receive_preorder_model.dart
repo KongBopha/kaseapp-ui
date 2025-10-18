@@ -6,6 +6,7 @@ class VendorReceivePreorderModel {
   final int orderDetailId;  
   final String farmName;      
   final String productName;
+  final String? productImage;
   final double requestedQty;        
   final double fulfilledQty;
   final String location;
@@ -19,6 +20,7 @@ class VendorReceivePreorderModel {
     required this.orderDetailId,
     required this.farmName,
     required this.productName,
+    this.productImage,
     required this.requestedQty,
     required this.fulfilledQty,
     required this.location,
@@ -34,6 +36,7 @@ class VendorReceivePreorderModel {
       orderDetailId: json['order_detail_id'] != null ? (json['order_detail_id'] as num).toInt() : 0,
       farmName: json['vendorName'] as String? ?? 'Unknown',  
       productName: json['product_name'] as String,
+      productImage: (json['product']?['image']),
       requestedQty: double.tryParse(json['requested_qty']?.toString() ?? '0') ?? 0.0,
       fulfilledQty: double.tryParse(json['fulfilled_qty']?.toString() ?? '0') ?? 0.0,
       location: json['location'] as String? ?? '',

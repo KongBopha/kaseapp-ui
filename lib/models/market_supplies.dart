@@ -2,6 +2,8 @@ import 'package:kaseapp_ui/utils/constants/base_api.dart';
 
 class MarketSupplies {
   final int id;
+  final int productId;
+  final int farmId;
   final String productName;
   final String productImage;
   final String farmName;
@@ -12,6 +14,8 @@ class MarketSupplies {
   MarketSupplies({
     required this.id,
     required this.productName,
+    required this.productId,
+    required this.farmId,
     required this.productImage,
     required this.farmName,
     required this.availableQty,
@@ -39,6 +43,8 @@ class MarketSupplies {
     return MarketSupplies(
       id: json['id'],
       productName: json['product']?['name'] ?? '',
+      productId: json['product']?['id'] ?? 0,
+      farmId: json['farm']?['id'] ?? 0,
       farmName: json['farm']?['name'] ?? '',
       productImage: getProductImageUrl(json['product']?['image']),
       availableQty: (json['available_qty'] as num).toDouble(),

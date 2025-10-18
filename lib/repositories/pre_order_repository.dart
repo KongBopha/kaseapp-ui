@@ -81,4 +81,41 @@ class PreOrderRepository {
       rethrow;
     }
   }
+ /// Order directly from market surplus screen
+Future<Either<Failure, PreOrder>> createOrderFromMarket({
+  required int userId,
+  required int farmId,
+  required int productId,
+  required double quantity,
+  required String unit,
+  required int marketSupplyId,
+  String? note,
+  String? recurringSchedule,
+  DateTime? deliveryDate,
+}) async {
+  try {
+    final Map<String, dynamic> requestBody = {
+      'user_id': userId,
+      'farm_id': farmId,
+      'product_id': productId,
+      'quantity': quantity,
+      'unit': unit,
+      'market_supply_id': marketSupplyId,
+      if (note != null) 'note': note,
+      if (recurringSchedule != null) 'recurring_schedule': recurringSchedule,
+      if (deliveryDate != null) 'delivery_date': deliveryDate.toIso8601String(),
+    };
+
+    final dynamic response = await _apiHelper.post(
+      endpoint: '/pre-orders/from-surplus',
+      jsonBody: requestBody,
+    );
+
+    final createdPreOrder = PreOrder.fromJson(response);
+    return Right(createdPreOrder);
+  } on Failure catch (e) {
+    return Left(e);
+  }
+}
+
 }
