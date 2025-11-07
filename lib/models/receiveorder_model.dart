@@ -3,6 +3,7 @@ class ReceiveorderModel {
   final int orderDetailId;
   final String vendorName;
   final String productName;
+  final String productImage;
   final double requestedQty;
   final double fulfilledQty;
   final String location;
@@ -15,6 +16,7 @@ class ReceiveorderModel {
     required this.orderDetailId,
     required this.vendorName,
     required this.productName,
+    required this.productImage,
     required this.requestedQty,
     required this.fulfilledQty,
     required this.location,
@@ -35,6 +37,7 @@ class ReceiveorderModel {
       note: json['note'] ?? 'No notes',
       deliveryDate: json['delivery_date'] ?? '',
       offerStatus: json['offer_status'] ?? 'pending',
+      productImage: json['product_image'] ?? 'Unknown Image',
     );
   }
 
@@ -44,6 +47,7 @@ class ReceiveorderModel {
       'order_detail_id': orderDetailId,
       'vendorName': vendorName,
       'product_name': productName,
+      'product_image': productImage,
       'requested_qty': requestedQty,
       'fulfilled_qty': fulfilledQty,
       'location': location,
@@ -57,6 +61,7 @@ class ReceiveorderModel {
     int? orderDetailId,
     String? vendorName,
     String? productName,
+    String? productImage,
     double? requestedQty,
     double? fulfilledQty,
     String? location,
@@ -69,6 +74,7 @@ class ReceiveorderModel {
       orderDetailId: orderDetailId ?? this.orderDetailId,
       vendorName: vendorName ?? this.vendorName,
       productName: productName ?? this.productName,
+      productImage: productImage ?? this.productImage,
       requestedQty: requestedQty ?? this.requestedQty,
       fulfilledQty: fulfilledQty ?? this.fulfilledQty,
       location: location ?? this.location,

@@ -3,6 +3,8 @@ import 'package:get/get.dart';
 import 'package:kaseapp_ui/controllers/receive_order_respond_controller.dart';
 import 'package:kaseapp_ui/controllers/user_controller.dart';
 import 'package:kaseapp_ui/models/vendor_receive_preorder_model.dart';
+import 'package:kaseapp_ui/utils/constants/app_image.dart';
+import 'package:kaseapp_ui/utils/constants/images_converter.dart';
 import 'package:kaseapp_ui/utils/order_details_enum.dart';
 import 'package:kaseapp_ui/configs/themes/app_theme.dart';
 import 'package:kaseapp_ui/models/user_model.dart';
@@ -136,100 +138,136 @@ class _VendorReceiveOrderCardStatefulState
   }
 
   @override
-  Widget build(BuildContext context) {
-    final preOrder = controller.receiveOrders[widget.orderIndex];
-    final isActionable = preOrder.status == OrderDetailsEnum.pending ||
-                         preOrder.status == OrderDetailsEnum.accepted;
+@override
+Widget build(BuildContext context) {
+  final preOrder = controller.receiveOrders[widget.orderIndex];
+  final isActionable = preOrder.status == OrderDetailsEnum.pending ||
+                       preOrder.status == OrderDetailsEnum.accepted;
+  final imagesConverter = ImagesConverter();
+  final productImageUrl = imagesConverter.getProductImageUrl(preOrder.productImage);
 
-    return Card(
-      margin: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-      elevation: 3,
-      child: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(preOrder.productName, style: const TextStyle(fontWeight: FontWeight.bold)),
-            const SizedBox(height: 4),
-            InkWell(
-              onTap: () => _showFarmerProfile(context, preOrder),
-              child: Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Text(
-                    'From ${preOrder.farmName}',
-                    style: TextStyle(
-                      decoration: TextDecoration.underline,
-                      color: Theme.of(context).primaryColor,
-                      fontWeight: FontWeight.w500,
-                    ),
-                  ),
-                  const SizedBox(width: 4),
-                  Icon(Icons.person, size: 16, color: Theme.of(context).primaryColor),
-                ],
-              ),
-            ),
-            const SizedBox(height: 8),
-            Text('Quantity offered: ${preOrder.fulfilledQty} kg',
-                style: const TextStyle(color: Colors.green, fontWeight: FontWeight.w600)),
-            const SizedBox(height: 4),
-            Text('Delivery: ${preOrder.deliveryDate}'),
-            const SizedBox(height: 4),
-            Text('Location: ${preOrder.location}'),
-            if (preOrder.note != null && preOrder.note!.isNotEmpty) ...[
-              const SizedBox(height: 4),
-              Text('Note: ${preOrder.note}'),
-            ],
-            const SizedBox(height: 8),
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-              decoration: BoxDecoration(
-                color: _statusColor(preOrder.status, isActionable),
-                borderRadius: BorderRadius.circular(12),
-              ),
-              child: Text(preOrder.status.name.capitalizeFirst!,
-                  style: const TextStyle(color: Colors.white)),
-            ),
-            const SizedBox(height: 10),
-            Row(
+  return Card(
+    margin: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+    elevation: 3,
+    child: Padding(
+      padding: const EdgeInsets.all(16),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // LEFT SIDE: DETAILS
+          Expanded(
+            flex: 3,
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Expanded(
-                  child: ElevatedButton(
-                    onPressed: isActionable
-                        ? () {
-                            controller.respondToOffer(
-                                orderDetailId: preOrder.orderDetailId,
-                                status: OrderDetailsEnum.confirmed);
-                          }
-                        : null,
-                    style: ElevatedButton.styleFrom(
-                        backgroundColor: isActionable ? Colors.blueAccent : Colors.grey),
-                    child: const Text('Confirm'),
+                Text(preOrder.productName, style: const TextStyle(fontWeight: FontWeight.bold)),
+                const SizedBox(height: 4),
+                InkWell(
+                  onTap: () => _showFarmerProfile(context, preOrder),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Text(
+                        'From ${preOrder.farmName}',
+                        style: TextStyle(
+                          decoration: TextDecoration.underline,
+                          color: Theme.of(context).primaryColor,
+                          fontWeight: FontWeight.w500,
+                        ),
+                      ),
+                      const SizedBox(width: 4),
+                      Icon(Icons.person, size: 16, color: Theme.of(context).primaryColor),
+                    ],
                   ),
                 ),
-                const SizedBox(width: 16),
-                Expanded(
-                  child: ElevatedButton(
-                    onPressed: isActionable
-                        ? () {
-                            controller.respondToOffer(
-                                orderDetailId: preOrder.orderDetailId,
-                                status: OrderDetailsEnum.rejected);
-                          }
-                        : null,
-                    style: ElevatedButton.styleFrom(
-                        backgroundColor: isActionable ? Colors.redAccent : Colors.grey),
-                    child: const Text('Reject'),
+                const SizedBox(height: 8),
+                Text('Quantity offered: ${preOrder.fulfilledQty} kg',
+                    style: const TextStyle(color: Colors.green, fontWeight: FontWeight.w600)),
+                const SizedBox(height: 4),
+                Text('Delivery: ${preOrder.deliveryDate}'),
+                const SizedBox(height: 4),
+                Text('Location: ${preOrder.location}'),
+                if (preOrder.note != null && preOrder.note!.isNotEmpty) ...[
+                  const SizedBox(height: 4),
+                  Text('Note: ${preOrder.note}'),
+                ],
+                const SizedBox(height: 8),
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                  decoration: BoxDecoration(
+                    color: _statusColor(preOrder.status, isActionable),
+                    borderRadius: BorderRadius.circular(12),
                   ),
+                  child: Text(preOrder.status.name.capitalizeFirst!,
+                      style: const TextStyle(color: Colors.white)),
                 ),
+                const SizedBox(height: 10),
+                Row(
+                  children: [
+                    Expanded(
+                      child: ElevatedButton(
+                        onPressed: isActionable
+                            ? () {
+                                controller.respondToOffer(
+                                    orderDetailId: preOrder.orderDetailId,
+                                    status: OrderDetailsEnum.confirmed);
+                              }
+                            : null,
+                        style: ElevatedButton.styleFrom(
+                            backgroundColor: isActionable ? Colors.blueAccent : Colors.grey),
+                        child: const Text('Confirm'),
+                      ),
+                    ),
+                    const SizedBox(width: 16),
+                    Expanded(
+                      child: ElevatedButton(
+                        onPressed: isActionable
+                            ? () {
+                                controller.respondToOffer(
+                                    orderDetailId: preOrder.orderDetailId,
+                                    status: OrderDetailsEnum.rejected);
+                              }
+                            : null,
+                        style: ElevatedButton.styleFrom(
+                            backgroundColor: isActionable ? Colors.redAccent : Colors.grey),
+                        child: const Text('Reject'),
+                      ),
+                    ),
+                  ],
+                )
               ],
+            ),
+          ),
+
+          const SizedBox(width: 12),
+
+          // RIGHT SIDE: PRODUCT IMAGE
+          ClipRRect(
+            borderRadius: BorderRadius.circular(12),
+            child: preOrder.productImage != null && preOrder.productImage!.isNotEmpty
+                ?  Image.network(
+              productImageUrl,
+              width: 100,
+              height: 100,
+              fit: BoxFit.cover,
+              errorBuilder: (context, error, stackTrace) {
+                return Image.asset(AppImage.orderIcon, width: 100, height: 100, fit: BoxFit.cover);
+              },
             )
-          ],
-        ),
+                : Container(
+                    width: 100,
+                    height: 100,
+                    decoration: BoxDecoration(color: Colors.grey[200], borderRadius: BorderRadius.circular(12)),
+                    child: const Center(child: Icon(Icons.image_not_supported, size: 40, color: Colors.grey)),
+                  ),
+          ),
+        ],
       ),
-    );
-  }
+    ),
+  );
+}
+
 
   Color _statusColor(OrderDetailsEnum status, bool isActionable) {
     if (isActionable) {

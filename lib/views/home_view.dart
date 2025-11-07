@@ -6,8 +6,6 @@ import 'package:kaseapp_ui/configs/themes/app_theme.dart';
 import 'package:kaseapp_ui/controllers/notification_controller.dart';
 import 'package:kaseapp_ui/controllers/middleware/auth_controller.dart';
 import 'package:kaseapp_ui/widgets/app_bar/primary_app_bar.dart';
-import 'login_view.dart';
-import 'register_view.dart';
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
@@ -57,6 +55,25 @@ class _HomePageState extends State<HomePage> {
           TextButton(
             onPressed: () {
               Get.back();
+              // Disable upgrade if user already has another role
+              if (userRole == 'farmer' && roleName == 'Vendor') {
+                Get.snackbar(
+                  'Access Restricted',
+                  'You are already a Farmer and cannot upgrade to Vendor.',
+                  backgroundColor: Colors.red.shade400,
+                  colorText: Colors.white,
+                );
+                return;
+              } else if (userRole == 'vendor' && roleName == 'Farmer') {
+                Get.snackbar(
+                  'Access Restricted',
+                  'You are already a Vendor and cannot upgrade to Farmer.',
+                  backgroundColor: Colors.red.shade400,
+                  colorText: Colors.white,
+                );
+                return;
+              }
+
               Get.toNamed(
                 roleName == "Farmer"
                     ? AppRoutes.farmerRequest
@@ -233,43 +250,49 @@ class _HomePageState extends State<HomePage> {
       );
 
   // ------------------------------------------------
-  //  Authentication Section
+  //  Authentication / Role Section
   // ------------------------------------------------
   Widget _buildAuthSection() {
     return Obx(() {
-      final isLoggedIn = _authController.auth;
+      final role = _authController.role; 
 
-      final cards = isLoggedIn
-          ? [
-              _buildAuthCard(
-                title: "Become a Farmer",
-                subtitle: "Request a farmer role to access FARM features",
-                color: const Color(0xFF4D74AF),
-                onTap: () => Get.toNamed(AppRoutes.farmerRequest),
-              ),
-              _buildAuthCard(
-                title: "Open a Vendor",
-                subtitle: "Request a vendor role to access MARKET features",
-                color: const Color(0xFF429464),
-                onTap: () => Get.toNamed(AppRoutes.vendorRequest),
-              ),
-            ]
-          : [
-              _buildAuthCard(
-                title: "Account Sign In",
-                subtitle: "Click here to sign into your account",
-                color: const Color(0xFF4D74AF),
-                onTap: () => Get.to(() =>   LoginView()),
-              ),
-              _buildAuthCard(
-                title: "Register",
-                subtitle: "Click here to create a new account",
-                color: const Color(0xFF429464),
-                onTap: () => Get.to(() => const RegisterTestView()),
-              ),
-            ];
+      if (role == 'consumer') {
+        // Show upgrade role options
+        return Column(
+          children: [
+            _buildAuthCard(
+              title: "Become a Farmer",
+              subtitle: "Request a farmer role to access FARM features",
+              color: const Color(0xFF4D74AF),
+              onTap: () => Get.toNamed(AppRoutes.farmerRequest),
+            ),
+            _buildAuthCard(
+              title: "Open a Vendor",
+              subtitle: "Request a vendor role to access MARKET features",
+              color: const Color(0xFF429464),
+              onTap: () => Get.toNamed(AppRoutes.vendorRequest),
+            ),
+          ],
+        );
+      } else if (role == 'farmer') {
+        // Show farmer banner (cannot upgrade)
+        return _buildBannerMessage(
+          title: "Welcome, Farmer!",
+          message:
+              "You can manage your farm, sell products, and connect with vendors.",
+          color: const Color(0xFF4D74AF),
+        );
+      } else if (role == 'vendor') {
+        // Show vendor banner (cannot upgrade)
+        return _buildBannerMessage(
+          title: "Welcome, Vendor!",
+          message:
+              "You can pre-order products from farmers and manage your pre-orders.",
+          color: const Color(0xFF429464),
+        );
+      }
 
-      return Column(children: cards);
+      return const SizedBox.shrink();
     });
   }
 
@@ -278,37 +301,82 @@ class _HomePageState extends State<HomePage> {
     required String subtitle,
     required Color color,
     required VoidCallback onTap,
+    bool isDisabled = false,
   }) {
-    return Container(
-      width: double.infinity,
-      margin: const EdgeInsets.symmetric(vertical: 6),
-      decoration: BoxDecoration(
-        color: color,
-        borderRadius: BorderRadius.circular(10),
-      ),
-      child: InkWell(
-        onTap: onTap,
-        borderRadius: BorderRadius.circular(10),
-        child: Padding(
-          padding: const EdgeInsets.all(12),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(title,
+    return Opacity(
+      opacity: isDisabled ? 0.5 : 1.0,
+      child: Container(
+        width: double.infinity,
+        margin: const EdgeInsets.symmetric(vertical: 6),
+        decoration: BoxDecoration(
+          color: color,
+          borderRadius: BorderRadius.circular(10),
+        ),
+        child: InkWell(
+          onTap: isDisabled ? null : onTap,
+          borderRadius: BorderRadius.circular(10),
+          child: Padding(
+            padding: const EdgeInsets.all(12),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  title,
                   style: const TextStyle(
                     fontSize: 18,
                     fontWeight: FontWeight.bold,
                     color: Colors.white,
-                  )),
-              const SizedBox(height: 5),
-              Text(subtitle,
+                  ),
+                ),
+                const SizedBox(height: 5),
+                Text(
+                  subtitle,
                   style: const TextStyle(
-                    fontSize: 13,
                     color: Colors.white,
-                  )),
-            ],
+                    fontSize: 13,
+                  ),
+                ),
+              ],
+            ),
           ),
         ),
+      ),
+    );
+  }
+
+  Widget _buildBannerMessage({
+    required String title,
+    required String message,
+    required Color color,
+  }) {
+    return Container(
+      width: double.infinity,
+      margin: const EdgeInsets.symmetric(vertical: 10),
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: color.withOpacity(0.9),
+        borderRadius: BorderRadius.circular(12),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            title,
+            style: const TextStyle(
+              color: Colors.white,
+              fontSize: 20,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+          const SizedBox(height: 6),
+          Text(
+            message,
+            style: const TextStyle(
+              color: Colors.white,
+              fontSize: 14,
+            ),
+          ),
+        ],
       ),
     );
   }

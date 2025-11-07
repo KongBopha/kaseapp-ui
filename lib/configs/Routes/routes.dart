@@ -51,6 +51,8 @@ class AppRoutes {
   static const String SummaryView = '/view-summary';
   static const String retriveOrder = '/order/details';
   static const String orderRespond = '/order-details/listing';
+
+  static const String resetPassword = '/reset-password';
   // Generate GetPages
 static List<GetPage> generateRoutes = [
   // Root route

@@ -2,6 +2,7 @@ class PreOrderListing {
   final int preOrderId;
   final String vendorName;
   final String productName;
+  final String productImage;
   final double quantity;
   final String location;
   final String note;
@@ -12,6 +13,7 @@ class PreOrderListing {
     required this.preOrderId,
     required this.vendorName,
     required this.productName,
+    required this.productImage,
     required this.quantity,
     required this.location,
     required this.note,
@@ -24,6 +26,7 @@ class PreOrderListing {
       preOrderId: (json['pre_order_id'] as num?)?.toInt() ?? 0,
       vendorName: json['vendor_name'] ?? 'Unknown Vendor',
       productName: json['product_name'] ?? 'Unknown Product',
+      productImage: json['product_image'] ?? '',
       quantity: double.tryParse(json['quantity']?.toString() ?? '0') ?? 0.0,
       location: json['location'] ?? 'Unknown Location',
       note: json['note'] ?? 'No notes',
@@ -37,6 +40,7 @@ class PreOrderListing {
       'pre_order_id': preOrderId,
       'vendor_name': vendorName,
       'product_name': productName,
+      'product_image': productImage,
       'quantity': quantity,
       'location': location,
       'note': note,

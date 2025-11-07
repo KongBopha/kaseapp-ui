@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "1014186503121",
+    "project_id": "kaseapp-project",
+    "storage_bucket": "kaseapp-project.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:1014186503121:android:be31abddcd1df910b08ef0",
+        "android_client_info": {
+          "package_name": "com.example.kaseapp_ui"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDuCLumyKPPvXd4xAB8OAsev4obeyPp8w8"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

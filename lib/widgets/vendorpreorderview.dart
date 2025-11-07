@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:kaseapp_ui/controllers/vendorpreorder_controller.dart';
 import 'package:kaseapp_ui/models/preorder_listing.dart';
+import 'package:kaseapp_ui/utils/constants/app_image.dart';
+import 'package:kaseapp_ui/utils/constants/images_converter.dart';
 import 'package:kaseapp_ui/utils/pre_order_enum.dart';
 import 'package:kaseapp_ui/configs/themes/app_theme.dart';
 
@@ -58,7 +60,6 @@ class _VendorPreOrderViewState extends State<VendorPreOrderView>
               fontWeight: FontWeight.w600,
             ),
           ),
-          // Add refresh action for better user control
           actions: [
             IconButton(
               onPressed: () => controller.vendorFilterPreOrder(loadMore: false),
@@ -206,240 +207,349 @@ class _VendorPreOrderViewState extends State<VendorPreOrderView>
     );
   }
 
-  Widget _buildPreorderCard(PreOrderListing order, int index) {
-    final bool isPending = order.status.toLowerCase() == 'pending';
-    final bool isFulfilled = order.status.toLowerCase() == 'fulfilled';
-    final bool isPartiallyFulfilled = order.status.toLowerCase() == 'partially_fulfilled';
-    final bool isCancelled = order.status.toLowerCase() == 'cancelled';
+Widget _buildPreorderCard(PreOrderListing order, int index) {
+  final bool isPending = order.status.toLowerCase() == 'pending';
+  final bool isFulfilled = order.status.toLowerCase() == 'fulfilled';
+  final bool isPartiallyFulfilled = order.status.toLowerCase() == 'partially_fulfilled';
+  final bool isCancelled = order.status.toLowerCase() == 'cancelled';
 
-     Color statusColor;
-    IconData statusIcon;
-    
-    if (isPending) {
-      statusColor = Colors.orange.shade600;
-      statusIcon = Icons.schedule_rounded;
-    } else if (isFulfilled) {
-      statusColor = Colors.green.shade600;
-      statusIcon = Icons.check_circle_rounded;
-    } else if (isPartiallyFulfilled) {
-      statusColor = Colors.blue.shade600;
-      statusIcon = Icons.verified_rounded;
-    } else {
-      statusColor = Colors.red.shade600;
-      statusIcon = Icons.cancel_rounded;
-    }
+  Color statusColor;
+  IconData statusIcon;
 
-    return Card(
-      elevation: 2,
-      shadowColor: Colors.black.withOpacity(0.1),
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(16),
-      ),
-      child: InkWell(
-        borderRadius: BorderRadius.circular(16),
-        onTap: () {
-          // Add subtle feedback for tappable cards
-          // Navigate to detail view or show bottom sheet
-        },
-        child: Container(
-          padding: const EdgeInsets.all(20),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              // Header with better visual hierarchy
-              Row(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          order.productName,
-                          style: TextStyle(
-                            color: AppTheme.itemTitleColor,
-                            fontSize: 18,
-                            fontWeight: FontWeight.w700,
-                            height: 1.2,
-                          ),
-                          maxLines: 2,
-                          overflow: TextOverflow.ellipsis,
+  if (isPending) {
+    statusColor = Colors.orange.shade600;
+    statusIcon = Icons.schedule_rounded;
+  } else if (isFulfilled) {
+    statusColor = Colors.green.shade600;
+    statusIcon = Icons.check_circle_rounded;
+  } else if (isPartiallyFulfilled) {
+    statusColor = Colors.blue.shade600;
+    statusIcon = Icons.verified_rounded;
+  } else {
+    statusColor = Colors.red.shade600;
+    statusIcon = Icons.cancel_rounded;
+  }
+
+  final imagesConverter = ImagesConverter();
+  final productImageUrl = imagesConverter.getProductImageUrl(order.productImage);
+
+  return Card(
+    elevation: 2,
+    shadowColor: Colors.black.withOpacity(0.1),
+    shape: RoundedRectangleBorder(
+      borderRadius: BorderRadius.circular(16),
+    ),
+    child: InkWell(
+      borderRadius: BorderRadius.circular(16),
+      onTap: () {
+        // Navigate to detail view or show bottom sheet
+      },
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // Header: Product image + name + status badge
+            Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                // Product image
+                ClipRRect(
+                  borderRadius: BorderRadius.circular(12),
+                  child: Image.network(
+                    productImageUrl,
+                    width: 80,
+                    height: 80,
+                    fit: BoxFit.cover,
+                    errorBuilder: (_, __, ___) =>
+                        Image.asset(AppImage.orderIcon, width: 80, height: 80),
+                  ),
+                ),
+                const SizedBox(width: 12),
+                // Product info
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      // Product name
+                      Text(
+                        order.productName,
+                        style: TextStyle(
+                          color: AppTheme.itemTitleColor,
+                          fontSize: 16,
+                          fontWeight: FontWeight.w700,
+                          height: 1.3,
                         ),
-                        const SizedBox(height: 8),
-                        // Better information layout with icons
-                        Row(
+                        maxLines: 2,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                      const SizedBox(height: 8),
+                      // Quantity badge
+                      Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                        decoration: BoxDecoration(
+                          color: Colors.grey.shade100,
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
                           children: [
-                            Icon(
-                              Icons.person_outline_rounded,
-                              size: 16,
-                              color: AppTheme.itemSubTitleColor,
-                            ),
+                            Icon(Icons.inventory_2_outlined,
+                                size: 14, color: AppTheme.itemSubTitleColor),
                             const SizedBox(width: 4),
-                            Expanded(
-                              child: Text(
-                                order.vendorName,
-                                style: TextStyle(
+                            Text(
+                              'Quantity: ${order.quantity}',
+                              style: TextStyle(
                                   color: AppTheme.itemSubTitleColor,
-                                  fontSize: 14,
-                                  fontWeight: FontWeight.w500,
-                                ),
-                                overflow: TextOverflow.ellipsis,
-                              ),
+                                  fontSize: 13,
+                                  fontWeight: FontWeight.w600),
                             ),
                           ],
                         ),
-                        const SizedBox(height: 4),
-                        Row(
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(width: 8),
+                // Status badge
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                  decoration: BoxDecoration(
+                    color: statusColor.withOpacity(0.15),
+                    borderRadius: BorderRadius.circular(20),
+                    border: Border.all(color: statusColor.withOpacity(0.4)),
+                  ),
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Icon(statusIcon, size: 18, color: statusColor),
+                      const SizedBox(height: 2),
+                      Text(
+                        order.status,
+                        style: TextStyle(
+                          color: statusColor,
+                          fontSize: 10,
+                          fontWeight: FontWeight.w700,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+            
+            const SizedBox(height: 16),
+            
+            // Divider
+            Divider(height: 1, color: Colors.grey.shade200),
+            
+            const SizedBox(height: 12),
+            
+            // Delivery details section
+            Row(
+              children: [
+                // Location
+                Expanded(
+                  child: Row(
+                    children: [
+                      Container(
+                        padding: const EdgeInsets.all(6),
+                        decoration: BoxDecoration(
+                          color: Colors.green.shade50,
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                        child: Icon(
+                          Icons.location_on_outlined,
+                          size: 16,
+                          color: Colors.green.shade700,
+                        ),
+                      ),
+                      const SizedBox(width: 8),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            Icon(
-                              Icons.inventory_2_outlined,
-                              size: 16,
-                              color: AppTheme.itemSubTitleColor,
-                            ),
-                            const SizedBox(width: 4),
                             Text(
-                              'Qty: ${order.quantity}',
+                              'Location',
                               style: TextStyle(
                                 color: AppTheme.itemSubTitleColor,
-                                fontSize: 14,
+                                fontSize: 11,
                                 fontWeight: FontWeight.w500,
                               ),
                             ),
+                            const SizedBox(height: 2),
+                            Text(
+                              order.location,
+                              style: TextStyle(
+                                color: AppTheme.itemTitleColor,
+                                fontSize: 13,
+                                fontWeight: FontWeight.w600,
+                              ),
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                            ),
                           ],
                         ),
-                      ],
-                    ),
-                  ),
-                  const SizedBox(width: 12),
-                  // Enhanced status badge
-                  Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-                    decoration: BoxDecoration(
-                      color: statusColor.withOpacity(0.1),
-                      borderRadius: BorderRadius.circular(20),
-                      border: Border.all(color: statusColor.withOpacity(0.3)),
-                    ),
-                    child: Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Icon(
-                          statusIcon,
-                          size: 14,
-                          color: statusColor,
-                        ),
-                        const SizedBox(width: 4),
-                        Text(
-                          order.status,
-                          style: TextStyle(
-                            color: statusColor,
-                            fontSize: 12,
-                            fontWeight: FontWeight.w600,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                ],
-              ),
-
-              const SizedBox(height: 20),
-
-              // Information grid with better spacing and icons
-              Container(
-                padding: const EdgeInsets.all(16),
-                decoration: BoxDecoration(
-                  color: Colors.grey.shade50,
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                child: Column(
-                  children: [
-                    Row(
-                      children: [
-                        Expanded(
-                          child: _buildInfoItem(
-                            icon: Icons.location_on_outlined,
-                            label: 'Location',
-                            value: order.location,
-                            valueColor: Colors.green.shade700,
-                          ),
-                        ),
-                        const SizedBox(width: 16),
-                        Expanded(
-                          child: _buildInfoItem(
-                            icon: Icons.local_shipping_outlined,
-                            label: 'Delivery Date',
-                            value: order.deliveryDate,
-                            valueColor: Colors.green.shade700,
-                          ),
-                        ),
-                      ],
-                    ),
-                    if (order.note.isNotEmpty) ...[
-                      const SizedBox(height: 16),
-                      _buildInfoItem(
-                        icon: Icons.note_outlined,
-                        label: 'Note',
-                        value: order.note,
-                        valueColor: AppTheme.itemTitleColor,
-                        isFullWidth: true,
                       ),
                     ],
+                  ),
+                ),
+                
+                const SizedBox(width: 12),
+                
+                // Delivery date
+                Expanded(
+                  child: Row(
+                    children: [
+                      Container(
+                        padding: const EdgeInsets.all(6),
+                        decoration: BoxDecoration(
+                          color: Colors.blue.shade50,
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                        child: Icon(
+                          Icons.local_shipping_outlined,
+                          size: 16,
+                          color: Colors.blue.shade700,
+                        ),
+                      ),
+                      const SizedBox(width: 8),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              'Delivery',
+                              style: TextStyle(
+                                color: AppTheme.itemSubTitleColor,
+                                fontSize: 11,
+                                fontWeight: FontWeight.w500,
+                              ),
+                            ),
+                            const SizedBox(height: 2),
+                            Text(
+                              order.deliveryDate,
+                              style: TextStyle(
+                                color: AppTheme.itemTitleColor,
+                                fontSize: 13,
+                                fontWeight: FontWeight.w600,
+                              ),
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+            
+            // Note section (if exists)
+            if (order.note.isNotEmpty) ...[
+              const SizedBox(height: 12),
+              Container(
+                width: double.infinity,
+                padding: const EdgeInsets.all(10),
+                decoration: BoxDecoration(
+                  color: Colors.amber.shade50,
+                  borderRadius: BorderRadius.circular(10),
+                  border: Border.all(color: Colors.amber.shade200),
+                ),
+                child: Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Icon(
+                      Icons.note_outlined,
+                      size: 16,
+                      color: Colors.amber.shade800,
+                    ),
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            'Note',
+                            style: TextStyle(
+                              color: Colors.amber.shade900,
+                              fontSize: 11,
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                          const SizedBox(height: 2),
+                          Text(
+                            order.note,
+                            style: TextStyle(
+                              color: Colors.amber.shade900,
+                              fontSize: 13,
+                              fontWeight: FontWeight.w500,
+                            ),
+                            maxLines: 2,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        ],
+                      ),
+                    ),
                   ],
                 ),
               ),
             ],
-          ),
-        ),
-      ),
-    );
-  }
-
-  Widget _buildInfoItem({
-    required IconData icon,
-    required String label,
-    required String value,
-    required Color valueColor,
-    bool isFullWidth = false,
-  }) {
-    return Column(
-      crossAxisAlignment: isFullWidth 
-          ? CrossAxisAlignment.start 
-          : CrossAxisAlignment.start,
-      children: [
-        Row(
-          mainAxisSize: isFullWidth ? MainAxisSize.max : MainAxisSize.min,
-          children: [
-            Icon(
-              icon,
-              size: 16,
-              color: AppTheme.itemSubTitleColor,
-            ),
-            const SizedBox(width: 6),
-            Text(
-              label,
-              style: TextStyle(
-                color: AppTheme.itemSubTitleColor,
-                fontSize: 13,
-                fontWeight: FontWeight.w500,
-              ),
-            ),
           ],
         ),
-        const SizedBox(height: 6),
-        Text(
-          value,
-          style: TextStyle(
-            color: valueColor,
-            fontSize: 15,
-            fontWeight: FontWeight.w600,
-            height: 1.3,
-          ),
-          maxLines: isFullWidth ? 3 : 2,
-          overflow: TextOverflow.ellipsis,
-        ),
-      ],
-    );
-  }
+      ),
+    ),
+  );
+}
+
+
+  // Widget _buildInfoItem({
+  //   required IconData icon,
+  //   required String label,
+  //   required String value,
+  //   required Color valueColor,
+  //   bool isFullWidth = false,
+  // }) {
+  //   return Column(
+  //     crossAxisAlignment: isFullWidth 
+  //         ? CrossAxisAlignment.start 
+  //         : CrossAxisAlignment.start,
+  //     children: [
+  //       Row(
+  //         mainAxisSize: isFullWidth ? MainAxisSize.max : MainAxisSize.min,
+  //         children: [
+  //           Icon(
+  //             icon,
+  //             size: 16,
+  //             color: AppTheme.itemSubTitleColor,
+  //           ),
+  //           const SizedBox(width: 6),
+  //           Text(
+  //             label,
+  //             style: TextStyle(
+  //               color: AppTheme.itemSubTitleColor,
+  //               fontSize: 13,
+  //               fontWeight: FontWeight.w500,
+  //             ),
+  //           ),
+  //         ],
+  //       ),
+  //       const SizedBox(height: 6),
+  //       Text(
+  //         value,
+  //         style: TextStyle(
+  //           color: valueColor,
+  //           fontSize: 15,
+  //           fontWeight: FontWeight.w600,
+  //           height: 1.3,
+  //         ),
+  //         maxLines: isFullWidth ? 3 : 2,
+  //         overflow: TextOverflow.ellipsis,
+  //       ),
+  //     ],
+  //   );
+  // }
 
   Widget _buildEmptyState() {
     return Center(

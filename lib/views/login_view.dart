@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:kaseapp_ui/controllers/auth/login_controller.dart';
+import 'package:kaseapp_ui/widgets/forget_password_screen.dart';
 
 class LoginView extends StatelessWidget {
   LoginView({super.key});
@@ -64,8 +65,8 @@ class LoginView extends StatelessWidget {
                     TextField(
                       controller: phoneController,
                       decoration: InputDecoration(
-                        labelText: 'Phone number',
-                        hintText: 'Enter phone number',
+                        labelText: 'Phone number or email',
+                        hintText: 'Enter phone number or email',
                         prefixIcon: const Icon(Icons.person_2_outlined),
                         border: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(10.0),
@@ -132,7 +133,12 @@ class LoginView extends StatelessWidget {
                     Align(
                       alignment: Alignment.centerLeft,
                       child: TextButton(
-                        onPressed: () => Get.toNamed('/reset-password'),
+                        onPressed: () =>Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => ForgotPasswordScreen(),
+                          ),
+                        ),
                         child: const Text(
                           'Forget password?',
                           style: TextStyle(

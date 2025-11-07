@@ -55,5 +55,12 @@ class NotificationRepository {
     }
 
   }
+  Future<void> registerFcmToken(String token) async {
+  await _apiHelper.post(
+    endpoint: '/notifications/register-token',
+    jsonBody: {'fcm_token': token},
+  );
+}
+
   
 }

@@ -31,7 +31,7 @@ class UserRepository {
         endPoint: '/auth/user_profile',
         jsonBody: {},
         image: image,
-        imageParam: 'image',
+        imageParam: 'profile_photo' 
       );
       return Right(response);
     } on Failure catch (exception) {
@@ -83,5 +83,59 @@ class UserRepository {
       return Left(exception);
     }
   }
+
+  // // vendor update profile 
+  //  Future<Either<Failure, dynamic>> updateVendorProfile({
+  //   String? name,
+  //   String? vendorType,
+  //   String? address,
+  //   String? about,
+  //   File? logo,
+  // }) async {
+  //   try {
+  //     final response = await _apiHelper.postMultipart(
+  //       endPoint: '/vendor/update-profile',
+  //       jsonBody: {
+  //         'name': name,
+  //         'vendor_type': vendorType,
+  //         'address': address,
+  //         'about': about,
+  //       },
+  //       image: logo,
+  //       imageParam: 'logo',
+  //     );
+  //     return Right(response);
+  //   } on Failure catch (e) {
+  //     return Left(e);
+  //   }
+  // }
+
+  // // update farm profile
+  
+  // Future<Either<Failure, dynamic>> updateFarmProfile({
+  //   String? name,
+  //   String? address,
+  //   String? description,
+  //   File? logo,
+  //   File? cover,
+  // }) async {
+  //   try {
+  //     final response = await _apiHelper.postMultipart(
+  //       endPoint: '/farm/update-profile',
+  //       jsonBody: {
+  //         'name': name,
+  //         'address': address,
+  //         'description': description,
+  //       },
+  //       image: logo,
+  //       imageParam: 'logo',
+  //       cover: cover,
+  //       coverParam: 'cover',
+  //     );
+  //     return Right(response);
+  //   } on Failure catch (e) {
+  //     return Left(e);
+  //   }
+  // }
   
 }

@@ -2,15 +2,18 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:get/get.dart';
 import 'package:flutter_typeahead/flutter_typeahead.dart';
+import 'package:geolocator/geolocator.dart';
+import 'package:geocoding/geocoding.dart';
+import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:kaseapp_ui/configs/themes/app_theme.dart';
 import 'package:kaseapp_ui/controllers/pre_order_controller.dart';
 import 'package:kaseapp_ui/controllers/product_controller.dart';
-import 'package:kaseapp_ui/controllers/user_controller.dart';
 import 'package:kaseapp_ui/models/pre_order_model.dart';
 import 'package:kaseapp_ui/utils/constants/app_image.dart';
 import 'package:kaseapp_ui/utils/constants/base_api.dart';
 import 'package:kaseapp_ui/utils/pre_order_enum.dart';
 import 'package:kaseapp_ui/widgets/app_bar/my_app_bar.dart';
+import 'package:kaseapp_ui/widgets/locationpicker.dart';
 
 class PreOrderRequestView extends StatefulWidget {
   final Map<String, dynamic>? preFilledData;
@@ -27,6 +30,7 @@ class _PreOrderRequestViewState extends State<PreOrderRequestView> {
   final TextEditingController _notesController = TextEditingController();
   final TextEditingController _recurringScheduleController = TextEditingController();
   final TextEditingController _searchController = TextEditingController();
+  final TextEditingController _locationController = TextEditingController();
 
   final PreOrderController _preOrderController = Get.find<PreOrderController>();
   late final ProductController _productController;
@@ -34,6 +38,10 @@ class _PreOrderRequestViewState extends State<PreOrderRequestView> {
   String? selectedProductId;
   Map<String, dynamic>? selectedProduct;
   DateTime selectedDeliveryDate = DateTime.now();
+  Position? _currentPosition;
+  bool _isLoadingLocation = false;
+  double? _selectedLat;
+  double? _selectedLng;
   
   // For keyboard navigation
   List<Map<String, dynamic>> _currentSuggestions = [];
@@ -75,6 +83,117 @@ class _PreOrderRequestViewState extends State<PreOrderRequestView> {
       _highlightedIndex = -1;
       _currentSuggestions = [];
     });
+  }
+
+  // Check location permissions
+  Future<bool> _handleLocationPermission() async {
+    bool serviceEnabled;
+    LocationPermission permission;
+
+    serviceEnabled = await Geolocator.isLocationServiceEnabled();
+    if (!serviceEnabled) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Location services are disabled. Please enable them.'),
+          backgroundColor: Colors.orange,
+        ),
+      );
+      return false;
+    }
+
+    permission = await Geolocator.checkPermission();
+    if (permission == LocationPermission.denied) {
+      permission = await Geolocator.requestPermission();
+      if (permission == LocationPermission.denied) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Location permissions are denied'),
+            backgroundColor: Colors.red,
+          ),
+        );
+        return false;
+      }
+    }
+
+    if (permission == LocationPermission.deniedForever) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Location permissions are permanently denied. Please enable them in settings.'),
+          backgroundColor: Colors.red,
+        ),
+      );
+      return false;
+    }
+
+    return true;
+  }
+
+  // Get current location
+  Future<void> _getCurrentLocation() async {
+    final hasPermission = await _handleLocationPermission();
+    if (!hasPermission) return;
+
+    setState(() {
+      _isLoadingLocation = true;
+    });
+
+    try {
+      Position position = await Geolocator.getCurrentPosition(
+        // ignore: deprecated_member_use
+        desiredAccuracy: LocationAccuracy.high,
+      );
+
+      setState(() {
+        _currentPosition = position;
+      });
+
+      // Get address from coordinates
+      await _getAddressFromCoordinates(position.latitude, position.longitude);
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Error getting location: $e'),
+          backgroundColor: Colors.red,
+        ),
+      );
+    } finally {
+      setState(() {
+        _isLoadingLocation = false;
+      });
+    }
+  }
+
+  // Convert coordinates to address
+  Future<void> _getAddressFromCoordinates(double latitude, double longitude) async {
+    try {
+      List<Placemark> placemarks = await placemarkFromCoordinates(latitude, longitude);
+      
+      if (placemarks.isNotEmpty) {
+        Placemark place = placemarks[0];
+        String address = '';
+        
+        if (place.street != null && place.street!.isNotEmpty) {
+          address += '${place.street}, ';
+        }
+        if (place.locality != null && place.locality!.isNotEmpty) {
+          address += '${place.locality}, ';
+        }
+        if (place.administrativeArea != null && place.administrativeArea!.isNotEmpty) {
+          address += '${place.administrativeArea}, ';
+        }
+        if (place.country != null && place.country!.isNotEmpty) {
+          address += place.country!;
+        }
+
+        setState(() {
+          _locationController.text = address.isNotEmpty ? address : 'Lat: $latitude, Long: $longitude';
+        });
+      }
+    } catch (e) {
+      setState(() {
+        _locationController.text = 'Lat: $latitude, Long: $longitude';
+      });
+    }
   }
 
   @override
@@ -127,6 +246,64 @@ class _PreOrderRequestViewState extends State<PreOrderRequestView> {
                     return null;
                   },
                 ),
+                const SizedBox(height: 20),
+                
+                // Location Input with GPS
+                TextFormField(
+                  controller: _locationController,
+                  decoration: InputDecoration(
+                    labelText: 'Delivery Location',
+                    hintText: 'Enter location or use GPS',
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                    suffixIcon: _isLoadingLocation
+                        ? const Padding(
+                            padding: EdgeInsets.all(12.0),
+                            child: SizedBox(
+                              width: 20,
+                              height: 20,
+                              child: CircularProgressIndicator(strokeWidth: 2),
+                            ),
+                          )
+                        : ElevatedButton.icon(
+                          icon: const Icon(Icons.map_outlined),
+                          label: const Text('Select on Map'),
+                          onPressed: () async {
+                            final LatLng? pickedLocation = await Navigator.push(
+                              context,
+                              MaterialPageRoute(builder: (context) => const VendorLocationPicker()),
+                            );
+
+                            if (pickedLocation != null) {
+                              setState(() {
+                                _selectedLat = pickedLocation.latitude;
+                                _selectedLng = pickedLocation.longitude;
+                              });
+                              // Convert coordinates to human-readable address
+                              await _getAddressFromCoordinates(_selectedLat!, _selectedLng!);
+                            }
+                          },
+                        ),
+                  ),
+                  validator: (value) {
+                    if (value == null || value.isEmpty) return 'Please enter or select location';
+                    return null;
+                  },
+                  maxLines: 2,
+                  minLines: 1,
+                ),
+                // if (_currentPosition != null)
+                //   Padding(
+                //     padding: const EdgeInsets.only(top: 8.0),
+                //     child: Text(
+                //       'Coordinates: ${_currentPosition!.latitude.toStringAsFixed(6)}, ${_currentPosition!.longitude.toStringAsFixed(6)}',
+                //       style: TextStyle(
+                //         fontSize: 12,
+                //         color: Colors.grey[600],
+                //       ),
+                //     ),
+                //   ),
                 const SizedBox(height: 20),
                 
                 // Delivery Date
@@ -253,7 +430,6 @@ class _PreOrderRequestViewState extends State<PreOrderRequestView> {
                     decoration: InputDecoration(
                       labelText: 'Search Product',
                       hintText: 'Type to search products',
-                      helperText: 'Use ↑↓ arrows, Tab or Enter to select',
                       helperStyle: TextStyle(
                         fontSize: 12,
                         color: Colors.grey[600],
@@ -497,6 +673,9 @@ class _PreOrderRequestViewState extends State<PreOrderRequestView> {
         "unit": widget.preFilledData!['unit'],
         "market_supply_id": widget.preFilledData!['market_supply_id'],
         "delivery_date": selectedDeliveryDate,
+        "location": _locationController.text,
+        if (_currentPosition != null) "latitude": _currentPosition!.latitude,
+        if (_currentPosition != null) "longitude": _currentPosition!.longitude,
         if (_notesController.text.isNotEmpty) "note": _notesController.text,
       };
 
@@ -534,7 +713,7 @@ class _PreOrderRequestViewState extends State<PreOrderRequestView> {
         userId: _preOrderController.userController.user.id!,
         productId: int.parse(selectedProductId!),
         qty: double.parse(_quantityController.text),
-        location: "Default Location",
+        location: _locationController.text,
         deliveryDate: selectedDeliveryDate,
         noteText: _notesController.text.isNotEmpty ? _notesController.text : null,
         status: PreOrderStatus.pending,
@@ -571,9 +750,11 @@ class _PreOrderRequestViewState extends State<PreOrderRequestView> {
     _notesController.clear();
     _recurringScheduleController.clear();
     _searchController.clear();
+    _locationController.clear();
     setState(() {
       selectedProduct = null;
       selectedProductId = null;
+      _currentPosition = null;
       _showSuggestions = false;
       _highlightedIndex = -1;
       _currentSuggestions = [];
@@ -587,6 +768,7 @@ class _PreOrderRequestViewState extends State<PreOrderRequestView> {
     _notesController.dispose();
     _recurringScheduleController.dispose();
     _searchController.dispose();
+    _locationController.dispose();
     super.dispose();
   }
 }

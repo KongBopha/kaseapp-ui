@@ -4,6 +4,7 @@ import 'package:kaseapp_ui/controllers/auth/logout_controller.dart';
 import 'package:kaseapp_ui/controllers/user_controller.dart';
 import 'package:kaseapp_ui/utils/constants/app_image.dart';
 import 'package:kaseapp_ui/utils/constants/base_api.dart';
+import 'package:kaseapp_ui/views/personal_info_view.dart';
 import 'package:kaseapp_ui/widgets/app_bar/my_app_bar.dart';
 
 class AccountView extends StatelessWidget {
@@ -95,14 +96,19 @@ class AccountView extends StatelessWidget {
               ),
             ),
             const SizedBox(height: 10),
-            Feature(title: "User information".tr, showIcon: true),
+            Feature(
+              title: "My information".tr,
+              showIcon: true,
+              onTap: () {
+                Get.to(() => const PersonalInfoView());
+              },
+            ),
             const SizedBox(height: 10),
-            Feature(title: "Accepted Order", showIcon: true),
             const Padding(
               padding: EdgeInsets.only(left: 20, top: 10, bottom: 20),
               child: Text(
                 "connect with other services",
-                style: TextStyle(color: Colors.black45),
+                style: TextStyle(color: Colors.black45),  
               ),
             ),
             const Feature(title: "Customer Service", showIcon: false),

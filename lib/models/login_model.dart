@@ -1,24 +1,23 @@
 class LoginModel {
   String  password;
-  String  phone;
+  String  login;
 
   LoginModel({
-
     required this.password,
-    required this.phone,
+    required this.login,
   });
 
   Map<String, dynamic> toJson() {
     return {
       'password': password,
-      'phone': phone,
+      'login': login,
     };
   }
 
   factory LoginModel.fromJson(Map<String, dynamic> json) {
     return LoginModel(
       password: json['password'],
-      phone: json['phone'],
+      login: json['login'],
     );
   }
   

@@ -72,7 +72,6 @@ class RegisterController extends GetxController {
         colorText: Colors.white,
         duration: const Duration(seconds: 3),
       );
-
       // Navigate to HomePage
       Navigator.of(context!).pushAndRemoveUntil(
         MaterialPageRoute(builder: (context) => const MainView()),

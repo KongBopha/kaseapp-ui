@@ -3,7 +3,6 @@ import 'package:get/get.dart';
 import 'package:kaseapp_ui/models/farm_model.dart';
 import 'package:kaseapp_ui/models/user_model.dart';
 import 'package:kaseapp_ui/models/vendor_model.dart';
-import 'package:kaseapp_ui/repositories/auth_repository.dart';
 import 'package:kaseapp_ui/repositories/user_repository.dart';
 import 'package:kaseapp_ui/utils/dialogs/dialogs.dart';
 import 'package:kaseapp_ui/controllers/middleware/auth_controller.dart';
@@ -17,6 +16,7 @@ class UserController extends GetxController {
 
   UserModel get user => _user.value;
   Rx<UserModel> get userRx => _user;
+
 
   /// Set user and print debug
   void setUser(UserModel userModel) {
@@ -38,7 +38,7 @@ class UserController extends GetxController {
     await Get.find<AuthController>().persistUser(_user.value);
   }
 
-  /// Update profile (image example)
+  /// Update profile 
   Future<void> updateProfile(File image) async {
     loading.value = true;
     print("[UserController] updateProfile called");
@@ -99,19 +99,6 @@ class UserController extends GetxController {
       },
       (success) async {
         loading.value = false;
-        final updatedUserJson = success as Map<String, dynamic>;
-        final updatedUser = UserModel.fromJson(updatedUserJson);
-
-        if (updatedUserJson['farm'] != null) {
-          updatedUser.farm = FarmModel.fromJson(updatedUserJson['farm']);
-        } else if (updatedUser.farm == null) {
-          updatedUser.role = 'farmer';
-        }
-
-        _user.value = updatedUser;
-        print("[UserController] upgradeToFarmer success: ${updatedUser.toJson()}");
-
-        await Get.find<AuthController>().persistUser(updatedUser);
       },
     );
   }
@@ -146,19 +133,6 @@ class UserController extends GetxController {
       },
       (success) async {
         loading.value = false;
-        final updatedUserJson = success as Map<String, dynamic>;
-        final updatedUser = UserModel.fromJson(updatedUserJson);
-
-        if (updatedUserJson['vendor'] != null) {
-          updatedUser.vendor = VendorModel.fromJson(updatedUserJson['vendor']);
-        } else {
-          updatedUser.role = 'vendor';
-        }
-
-        _user.value = updatedUser;
-        print("[UserController] upgradeToVendor success: ${updatedUser.toJson()}");
-
-        await Get.find<AuthController>().persistUser(updatedUser);
       },
     );
   }
@@ -177,4 +151,68 @@ class UserController extends GetxController {
       loading.value = false;
     }
   }
+  //  // Update Vendor info
+  // Future<void> updateVendorProfile({
+  //   String? name,
+  //   String? vendorType,
+  //   String? address,
+  //   String? about,
+  //   File? logo,
+  // }) async {
+  //   loading.value = true;
+  //   final result = await _userRepository.updateVendorProfile(
+  //     name: name,
+  //     vendorType: vendorType,
+  //     address: address,
+  //     about: about,
+  //     logo: logo,
+  //   );
+
+  //   result.fold(
+  //     (failure) {
+  //       loading.value = false;
+  //       print('[UserController] updateVendorProfile failed: ${failure.message}');
+  //     },
+  //     (success) {
+  //       loading.value = false;
+  //       _user.value = _user.value.copyWith(
+  //         vendor: VendorModel.fromJson(success['vendor']),
+  //       );
+  //       print('[UserController] updateVendorProfile success');
+  //     },
+  //   );
+  // }
+
+  // // Update Farm info
+  // Future<void> updateFarmProfile({
+  //   String? name,
+  //   String? address,
+  //   String? description,
+  //   File? logo,
+  //   File? cover,
+  // }) async {
+  //   loading.value = true;
+  //   final result = await _userRepository.updateFarmProfile(
+  //     name: name,
+  //     address: address,
+  //     description: description,
+  //     logo: logo,
+  //     cover: cover,
+  //   );
+
+  //   result.fold(
+  //     (failure) {
+  //       loading.value = false;
+  //       print('[UserController] updateFarmProfile failed: ${failure.message}');
+  //     },
+  //     (success) {
+  //       loading.value = false;
+  //       _user.value = _user.value.copyWith(
+  //         farm: FarmModel.fromJson(success['farm']),
+  //       );
+
+  //       print('[UserController] updateFarmProfile success');
+  //     },
+  //   );
+  // }
 }

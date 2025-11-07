@@ -3,7 +3,11 @@ import 'package:get/get.dart';
 import 'package:kaseapp_ui/configs/Routes/routes.dart';
 import 'package:kaseapp_ui/controllers/middleware/auth_controller.dart';
 import 'package:kaseapp_ui/controllers/notification_controller.dart';
-//import 'package:kaseapp_ui/models/notification_model.dart';
+import 'package:kaseapp_ui/models/farm_model.dart';
+import 'package:kaseapp_ui/models/vendor_model.dart';
+import 'package:kaseapp_ui/models/product.dart';
+import 'package:kaseapp_ui/models/notification_summary.dart';
+import 'package:kaseapp_ui/utils/constants/images_converter.dart';
 
 class NotificationSummaryView extends StatefulWidget {
   @override
@@ -120,6 +124,7 @@ class _NotificationSummaryViewState extends State<NotificationSummaryView> {
               return _NotificationCard(
                 summary: summary,
                 hasUnread: hasUnread,
+                currentRole: authController.role.toLowerCase(),
                 controller: controller,
               );
             },
@@ -131,13 +136,15 @@ class _NotificationSummaryViewState extends State<NotificationSummaryView> {
 }
 
 class _NotificationCard extends StatefulWidget {
-  final dynamic summary;
+  final NotificationSummary summary;
   final bool hasUnread;
+  final String currentRole;
   final NotificationController controller;
 
   const _NotificationCard({
     required this.summary,
     required this.hasUnread,
+    required this.currentRole,
     required this.controller,
   });
 
@@ -147,6 +154,8 @@ class _NotificationCard extends StatefulWidget {
 
 class _NotificationCardState extends State<_NotificationCard> {
   bool _isExpanded = false;
+  final ImagesConverter _imageConverter = ImagesConverter();
+
 
   String _getTimeAgo(DateTime dateTime) {
     final now = DateTime.now();
@@ -166,21 +175,19 @@ class _NotificationCardState extends State<_NotificationCard> {
   @override
   Widget build(BuildContext context) {
     final summary = widget.summary;
-
-    final productName = summary.product != null
-        ? summary.product['name']
-        : 'Pre-order #${summary.preOrderId}';
-
-    // Key changes: Access vendor_info for vendor name, user_info for phone, fallback to farm
-    String subtitleText = '';
-    if (summary.vendor != null) {
-      final vendorInfo = summary.vendor['vendor_info'];
-      final userInfo = summary.vendor['user_info'];
-      final vendorName = vendorInfo?['name'] ?? 'Unknown Vendor';
-      final contactPhone = userInfo?['phone'] ?? 'N/A';
-      subtitleText = 'Vendor: $vendorName | Contact: $contactPhone';
+    final String? imageUrl = _imageConverter.getProductImageUrl(summary.product?.image);
+    final productName = summary.product?.name ?? 'Pre-order #${summary.preOrderId}';
+    String partnerText = '';
+    if (widget.currentRole == 'vendor' && summary.farm != null) {
+      final FarmModel farm = summary.farm!;
+      partnerText = 'Farm: ${farm.name}';
+    } else if (widget.currentRole == 'farmer' && summary.vendor != null) {
+      final VendorModel vendor = summary.vendor!;
+      partnerText = 'Vendor: ${vendor.companyName ?? 'Unknown'}';
+    } else if (summary.vendor != null) {
+      partnerText = 'Vendor: ${summary.vendor!.companyName ?? 'Unknown'}';
     } else if (summary.farm != null) {
-      subtitleText = 'Farm: ${summary.farm['name']}';
+      partnerText = 'Farm: ${summary.farm!.name}';
     }
 
     return Container(
@@ -199,36 +206,40 @@ class _NotificationCardState extends State<_NotificationCard> {
       child: Column(
         children: [
           InkWell(
-            onTap: () {
-              setState(() {
-                _isExpanded = !_isExpanded;
-              });
-            },
+            onTap: () => setState(() => _isExpanded = !_isExpanded),
             borderRadius: BorderRadius.circular(12),
             child: Padding(
               padding: const EdgeInsets.all(16),
               child: Row(
                 children: [
                   // Icon
-                  Container(
-                    width: 48,
-                    height: 48,
-                    decoration: BoxDecoration(
-                      color: widget.hasUnread
-                          ? const Color(0xFF10B981).withOpacity(0.1)
-                          : Colors.grey[100],
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                    child: Icon(
-                      Icons.shopping_bag_outlined,
-                      color: widget.hasUnread
-                          ? const Color(0xFF10B981)
-                          : Colors.grey[600],
-                      size: 24,
-                    ),
+                Container(
+                  width: 48,
+                  height: 48,
+                  decoration: BoxDecoration(
+                    borderRadius: BorderRadius.circular(12),
+                    color: Colors.grey[100],
+                    image: summary.product?.image != null && summary.product!.image!.isNotEmpty
+                        ? DecorationImage(
+                            image: NetworkImage(imageUrl!),
+                            fit: BoxFit.cover,
+                          )
+                        : null,
                   ),
+                  child: summary.product?.image == null || summary.product!.image!.isEmpty
+                      ? Icon(
+                          Icons.shopping_bag_outlined,
+                          color: widget.hasUnread
+                              ? const Color(0xFF10B981)
+                              : Colors.grey[600],
+                          size: 24,
+                        )
+                      : null,
+                ),
+
                   const SizedBox(width: 12),
-                  // Content
+
+                  // Texts
                   Expanded(
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
@@ -263,7 +274,7 @@ class _NotificationCardState extends State<_NotificationCard> {
                         ),
                         const SizedBox(height: 4),
                         Text(
-                          subtitleText, // updated here
+                          partnerText,
                           style: TextStyle(
                             fontSize: 14,
                             color: Colors.grey[600],
@@ -282,7 +293,6 @@ class _NotificationCardState extends State<_NotificationCard> {
                       ],
                     ),
                   ),
-                  // Expand icon
                   Icon(
                     _isExpanded
                         ? Icons.keyboard_arrow_up
@@ -293,7 +303,8 @@ class _NotificationCardState extends State<_NotificationCard> {
               ),
             ),
           ),
-          // Expanded notifications
+
+          // Expand section
           if (_isExpanded)
             Container(
               decoration: BoxDecoration(
@@ -306,7 +317,7 @@ class _NotificationCardState extends State<_NotificationCard> {
               child: Column(
                 children: [
                   const Divider(height: 1),
-                  ...summary.notifications.map<Widget>((notif) {
+                  ...summary.notifications.map((notif) {
                     final isUnread = !notif.isRead;
                     return InkWell(
                       onTap: () {

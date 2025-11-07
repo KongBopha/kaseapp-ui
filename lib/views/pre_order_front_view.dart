@@ -22,6 +22,12 @@ class _PreOrderFrontViewState extends State<PreOrderFrontView> {
     super.initState();
     preOrderController.fetchPreorder();
   }
+  // generate receipt id
+  String _generateReceiptId(int realId) {
+  final randomPart = (realId * 9973) % 100000;  
+  return 'PR-${randomPart.toString().padLeft(5, '0')}';
+}
+
 
   void _clearFilters() {
     _searchController.clear();
@@ -291,161 +297,310 @@ class _PreOrderFrontViewState extends State<PreOrderFrontView> {
     );
   }
 
-  Widget _buildPreOrderCard(PreOrderListItem order, int index) {
-    final status = order.status;
-    final statusColor = _getStatusColor(status);
-    final statusBgColor = _getStatusBackgroundColor(status);
-    final imageConverter = ImagesConverter();
-    final productImageUrl = imageConverter.getProductImageUrl(order.productImage);
+Widget _buildPreOrderCard(PreOrderListItem order, int index) {
+  final status = order.status;
+  final statusColor = _getStatusColor(status);
+  final statusBgColor = _getStatusBackgroundColor(status);
+  final imageConverter = ImagesConverter();
+  final productImageUrl = imageConverter.getProductImageUrl(order.productImage);
 
-    return Container(
-      margin: const EdgeInsets.only(bottom: 12),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(12),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.04),
-            blurRadius: 8,
-            offset: const Offset(0, 2),
-          ),
-        ],
-        border: Border.all(
-          color: Colors.grey.shade200,
-          width: 1,
+  return Container(
+    margin: const EdgeInsets.only(bottom: 12),
+    decoration: BoxDecoration(
+      color: Colors.white,
+      borderRadius: BorderRadius.circular(12),
+      boxShadow: [
+        BoxShadow(
+          color: Colors.black.withOpacity(0.04),
+          blurRadius: 8,
+          offset: const Offset(0, 2),
         ),
+      ],
+      border: Border.all(
+        color: Colors.grey.shade200,
+        width: 1,
       ),
-      child: Material(
-        color: Colors.transparent,
-        child: InkWell(
-          borderRadius: BorderRadius.circular(12),
-          onTap: () {},
-          child: Padding(
-            padding: const EdgeInsets.all(16),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                // Header
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Text(
-                      "PR-${order.id}",
-                      style: const TextStyle(
-                        fontWeight: FontWeight.w700,
-                        fontSize: 16,
-                        color: Colors.black87,
-                        letterSpacing: -0.3,
-                      ),
+    ),
+    child: Material(
+      color: Colors.transparent,
+      child: InkWell(
+        borderRadius: BorderRadius.circular(12),
+        onTap: () {},
+        child: Padding(
+          padding: const EdgeInsets.all(16),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              // Header
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Text(
+                    "PR-${_generateReceiptId(order.id)}",
+                    style: const TextStyle(
+                      fontWeight: FontWeight.w700,
+                      fontSize: 16,
+                      color: Colors.black87,
+                      letterSpacing: -0.3,
                     ),
-                    Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                      decoration: BoxDecoration(
-                        color: statusBgColor,
-                        borderRadius: BorderRadius.circular(20),
-                        border: Border.all(color: statusColor.withOpacity(0.3)),
-                      ),
-                      child: Text(
-                        status.toUpperCase(),
-                        style: TextStyle(
-                          color: statusColor,
-                          fontWeight: FontWeight.w600,
-                          fontSize: 12,
-                          letterSpacing: 0.5,
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 12),
-                // Product Info
-                Row(
-                  children: [
-                    ClipRRect(
-                      borderRadius: BorderRadius.circular(8),
-                      child: Image.network(
-                        productImageUrl,
-                        width: 60,
-                        height: 60,
-                        fit: BoxFit.cover,
-                        errorBuilder: (context, error, stackTrace) {
-                          return Icon(
-                            Icons.inventory_2_outlined,
-                            color: Colors.green.shade600,
-                            size: 40,
-                          );
-                        },
-                      ),
-                    ),
-                    const SizedBox(width: 12),
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            order.productName,
-                            style: const TextStyle(
-                              fontSize: 16,
-                              fontWeight: FontWeight.w600,
-                              color: Colors.black87,
-                            ),
-                          ),
-                          const SizedBox(height: 2),
-                          Text(
-                            "${order.quantity} kg",
-                            style: TextStyle(
-                              fontSize: 14,
-                              color: Colors.grey.shade600,
-                              fontWeight: FontWeight.w500,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 12),
-                // Delivery Info
-                Container(
-                  padding: const EdgeInsets.all(12),
-                  decoration: BoxDecoration(
-                    color: Colors.grey.shade50,
-                    borderRadius: BorderRadius.circular(8),
-                    border: Border.all(color: Colors.grey.shade200),
                   ),
-                  child: Row(
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                    decoration: BoxDecoration(
+                      color: statusBgColor,
+                      borderRadius: BorderRadius.circular(20),
+                      border: Border.all(color: statusColor.withOpacity(0.3)),
+                    ),
+                    child: Text(
+                      status.toUpperCase(),
+                      style: TextStyle(
+                        color: statusColor,
+                        fontWeight: FontWeight.w600,
+                        fontSize: 12,
+                        letterSpacing: 0.5,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 12),
+              // Product Info
+              Row(
+                children: [
+                  ClipRRect(
+                    borderRadius: BorderRadius.circular(8),
+                    child: Image.network(
+                      productImageUrl,
+                      width: 60,
+                      height: 60,
+                      fit: BoxFit.cover,
+                      errorBuilder: (context, error, stackTrace) {
+                        return Icon(
+                          Icons.inventory_2_outlined,
+                          color: Colors.green.shade600,
+                          size: 40,
+                        );
+                      },
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          order.productName,
+                          style: const TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.w600,
+                            color: Colors.black87,
+                          ),
+                        ),
+                        const SizedBox(height: 2),
+                        Text(
+                          "${order.quantity} kg",
+                          style: TextStyle(
+                            fontSize: 14,
+                            color: Colors.grey.shade600,
+                            fontWeight: FontWeight.w500,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  Row(
                     children: [
-                      Icon(
-                        Icons.local_shipping_outlined,
-                        color: Colors.grey.shade600,
-                        size: 18,
+                      IconButton(
+                        onPressed: () {
+                          _showEditDialog(context, order);
+                        },
+                        icon: Icon(Icons.edit, color: Colors.blue.shade600),
+                        tooltip: 'Edit',
                       ),
-                      const SizedBox(width: 8),
-                      Text(
-                        "Delivery: ",
-                        style: TextStyle(
-                          color: Colors.grey.shade600,
-                          fontSize: 14,
-                        ),
-                      ),
-                      Text(
-                        order.deliveryDate,
-                        style: const TextStyle(
-                          fontWeight: FontWeight.w600,
-                          fontSize: 14,
-                          color: Colors.black87,
-                        ),
+                      IconButton(
+                        onPressed: () async {
+                          final confirm = await showDialog<bool>(
+                            context: context,
+                            builder: (ctx) => AlertDialog(
+                              title: const Text('Confirm Delete'),
+                              content: Text('Are you sure you want to delete PR-${order.id}?'),
+                              actions: [
+                                TextButton(
+                                  onPressed: () => Navigator.pop(ctx, false),
+                                  child: const Text('Cancel'),
+                                ),
+                                TextButton(
+                                  onPressed: () => Navigator.pop(ctx, true),
+                                  child: const Text('Delete', style: TextStyle(color: Colors.red)),
+                                ),
+                              ],
+                            ),
+                          );
+                          if (confirm == true) {
+                            final success = await preOrderController.deletePreOrder(order.id);
+                            if (!success) {
+                              Get.snackbar('Error', 'Failed to delete order',
+                                  backgroundColor: Colors.red.shade400, colorText: Colors.white);
+                            }
+                          }
+                        },
+                        icon: Icon(Icons.delete, color: Colors.red.shade600),
+                        tooltip: 'Delete',
                       ),
                     ],
                   ),
+                ],
+              ),
+              const SizedBox(height: 12),
+              // Delivery Info
+              Container(
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  color: Colors.grey.shade50,
+                  borderRadius: BorderRadius.circular(8),
+                  border: Border.all(color: Colors.grey.shade200),
                 ),
-              ],
-            ),
+                child: Row(
+                  children: [
+                    Icon(
+                      Icons.local_shipping_outlined,
+                      color: Colors.grey.shade600,
+                      size: 18,
+                    ),
+                    const SizedBox(width: 8),
+                    Text(
+                      "Delivery: ",
+                      style: TextStyle(
+                        color: Colors.grey.shade600,
+                        fontSize: 14,
+                      ),
+                    ),
+                    Text(
+                      order.deliveryDate,
+                      style: const TextStyle(
+                        fontWeight: FontWeight.w600,
+                        fontSize: 14,
+                        color: Colors.black87,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
           ),
         ),
       ),
-    );
-  }
+    ),
+  );
+}
+void _showEditDialog(BuildContext context, PreOrderListItem order) {
+  final TextEditingController quantityController = 
+      TextEditingController(text: order.quantity.toString());
+  final TextEditingController deliveryDateController =
+      TextEditingController(text: order.deliveryDate);
+
+  showDialog(
+    context: context,
+    builder: (ctx) {
+      return AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+        title: Text('Edit Pre-Order #PR-${order.id}'),
+        content: SingleChildScrollView(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              // Product name (read-only)
+              TextField(
+                enabled: false,
+                decoration: InputDecoration(
+                  labelText: 'Product',
+                  border: const OutlineInputBorder(),
+                  hintText: order.productName,
+                ),
+              ),
+              const SizedBox(height: 12),
+              
+              // Quantity field (editable)
+              TextField(
+                controller: quantityController,
+                keyboardType: TextInputType.number,
+                decoration: const InputDecoration(
+                  labelText: 'Quantity (kg)',
+                  border: OutlineInputBorder(),
+                ),
+              ),
+              const SizedBox(height: 12),
+
+              // Delivery date field (editable with date picker)
+              TextField(
+                controller: deliveryDateController,
+                readOnly: true,
+                decoration: InputDecoration(
+                  labelText: 'Delivery Date',
+                  border: const OutlineInputBorder(),
+                  suffixIcon: IconButton(
+                    icon: const Icon(Icons.calendar_today),
+                    onPressed: () async {
+                      final DateTime? pickedDate = await showDatePicker(
+                        context: ctx,
+                        initialDate: DateTime.tryParse(order.deliveryDate) ?? DateTime.now(),
+                        firstDate: DateTime.now(),
+                        lastDate: DateTime(2100),
+                      );
+                      if (pickedDate != null) {
+                        deliveryDateController.text =
+                            pickedDate.toIso8601String().split('T').first;
+                      }
+                    },
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx),
+            child: const Text('Cancel'),
+          ),
+          ElevatedButton(
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Colors.blue.shade600,
+              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+            ),
+            onPressed: () async {
+              final updatedOrder = {
+                'quantity': quantityController.text,
+                'delivery_date': deliveryDateController.text,
+              }; 
+
+              final success = await preOrderController.updatePreOrder(id: order.id, updates: updatedOrder);
+              if (success) {
+                Get.snackbar(
+                  'Success',
+                  'Pre-order updated successfully',
+                  backgroundColor: Colors.green.shade400,
+                  colorText: Colors.white,
+                );
+                Navigator.pop(ctx);
+              } else {
+                Get.snackbar(
+                  'Error',
+                  'Failed to update order',
+                  backgroundColor: Colors.red.shade400,
+                  colorText: Colors.white,
+                );
+              }
+            },
+            child: const Text('Save'),
+          ),
+        ],
+      );
+    },
+  );
+}
+
 
   Widget _buildPagination() {
     return Obx(() {

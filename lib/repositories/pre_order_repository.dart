@@ -46,7 +46,7 @@ class PreOrderRepository {
   Future<Map<String, dynamic>> getPreOrders({
     int page = 1,
     String? search,
-    String? timeFilter, // 'today', 'this_week', 'next_week' or null for all
+    String? timeFilter,  
   }) async {
     try {
       final queryParams = <String, dynamic>{
@@ -60,7 +60,7 @@ class PreOrderRepository {
         queryParameters: queryParams,
       );
 
-      print("API response: $response"); // Debug
+      print("API response: $response"); 
 
       final dataList = (response['data']['data'] as List?) ?? [];
 
@@ -81,6 +81,47 @@ class PreOrderRepository {
       rethrow;
     }
   }
+  Future<Either<Failure, PreOrder>> getPreOrderById(int id) async {
+    try {
+      final response = await _apiHelper.get(
+        endpoint: '/pre-orders/$id',
+      );
+
+      return Right(PreOrder.fromJson(response['data']));
+    } on Failure catch (e) {
+      return Left(e);
+    }
+  }
+
+  Future<Either<Failure, PreOrder>> updatePreOrder({
+    required int id,
+    required Map<String, dynamic> updates,
+  }) async {
+    try {
+      final response = await _apiHelper.update(
+        endpoint: '/pre-orders/$id',
+        jsonBody: updates,
+      );
+
+      return Right(PreOrder.fromJson(response['data']));
+    } on Failure catch (e) {
+      return Left(e);
+    }
+  }
+
+  Future<Either<Failure, bool>> deletePreOrder(int id) async {
+    try {
+      await _apiHelper.delete(
+        endpoint: '/pre-orders/$id',
+        queryParameters: {},
+      );
+
+      return const Right(true);
+    } on Failure catch (e) {
+      return Left(e);
+    }
+  }
+  
  /// Order directly from market surplus screen
 Future<Either<Failure, PreOrder>> createOrderFromMarket({
   required int userId,

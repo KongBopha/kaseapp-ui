@@ -17,12 +17,12 @@ class UserModel {
   });
 
   final int? id;
-  final String? firstName;
-  final String? lastName;
-  final String? profileUrl;
-  final String? email;
-  final String? phone;
-  String role;
+  late final String? firstName;
+  late final String? lastName;
+  late final String? profileUrl;
+  late final String? email;
+  late final String? phone;
+  late String role;
   FarmModel? farm;
   VendorModel? vendor;
   final DateTime? createdAt;
@@ -63,4 +63,31 @@ factory UserModel.fromJson(Map<String, dynamic> json) => UserModel(
         "updated_at": updatedAt?.toIso8601String(),
       };
   factory UserModel.empty() => UserModel(role: 'consumer');
+   UserModel copyWith({
+    int? id,
+    String? firstName,
+    String? lastName,
+    String? profileUrl,
+    String? email,
+    String? phone,
+    String? role,
+    FarmModel? farm,
+    VendorModel? vendor,
+    DateTime? createdAt,
+    DateTime? updatedAt,
+  }) {
+    return UserModel(
+      id: id ?? this.id,
+      firstName: firstName ?? this.firstName,
+      lastName: lastName ?? this.lastName,
+      profileUrl: profileUrl ?? this.profileUrl,
+      email: email ?? this.email,
+      phone: phone ?? this.phone,
+      role: role ?? this.role,
+      farm: farm ?? this.farm,
+      vendor: vendor ?? this.vendor,
+      createdAt: createdAt ?? this.createdAt,
+      updatedAt: updatedAt ?? this.updatedAt,
+    );
+  }
 }

@@ -49,15 +49,15 @@ class FarmerRequestView extends StatelessWidget {
                     about: aboutController.text,
                     logo: logoController.text,
                   );
-                  authController.upgradeRole('farmer');
-                  Get.snackbar(
-                    "Congratulations!",
-                    "You are now a ${userController.user.role}!",
-                    snackPosition: SnackPosition.TOP,
-                    backgroundColor: Colors.green.withOpacity(0.85),
-                    colorText: Colors.white,
-                    duration: const Duration(seconds: 3),
-                  );
+                    Get.snackbar(
+                      "Request Submitted",
+                      "Your request to become a farmer has been sent. You will be notified once it's reviewed.",
+                      snackPosition: SnackPosition.TOP,
+                      // ignore: deprecated_member_use
+                      backgroundColor: Colors.blue.withOpacity(0.85),
+                      colorText: Colors.white,
+                      duration: const Duration(seconds: 3),
+                    );
 
                   Navigator.of(context).pushAndRemoveUntil(
                     MaterialPageRoute(builder: (context) => const MainView()),
@@ -159,3 +159,4 @@ class FarmerRequestView extends StatelessWidget {
     );
   }
 }
+  

@@ -43,26 +43,39 @@ class VendorRequestView extends StatelessWidget {
               height: 50,
               child: ElevatedButton(
                 onPressed: () async {
-                  await userController.upgradeToVendor(
-                    name: nameController.text,
-                    address: addressController.text,
-                    description: aboutController.text,
-                    vendorType: vendorTypeController.text,
-                  );
-                  authController.upgradeRole('vendor');
-                  Get.snackbar(
-                    "Congratulations!",
-                    "You are now a ${userController.user.role}!",
-                    snackPosition: SnackPosition.TOP,
-                    backgroundColor: Colors.green.withOpacity(0.85),
-                    colorText: Colors.white,
-                    duration: const Duration(seconds: 3),
-                  );
+                  try {
+                    await userController.upgradeToVendor(
+                      name: nameController.text,
+                      address: addressController.text,
+                      description: aboutController.text,
+                      vendorType: vendorTypeController.text,
+                    );
 
-                  Navigator.of(context).pushAndRemoveUntil(
-                    MaterialPageRoute(builder: (context) => const MainView()),
-                    (Route<dynamic> route) => false,
-                  );
+                    Get.snackbar(
+                      "Request Submitted",
+                      "Your request to become a vendor has been sent. You will be notified once it's reviewed.",
+                      snackPosition: SnackPosition.TOP,
+                      // ignore: deprecated_member_use
+                      backgroundColor: Colors.blue.withOpacity(0.85),
+                      colorText: Colors.white,
+                      duration: const Duration(seconds: 3),
+                    );
+
+                    Navigator.of(context).pushAndRemoveUntil(
+                      MaterialPageRoute(builder: (context) => const MainView()),
+                      (Route<dynamic> route) => false,
+                    );
+                  } catch (e) {
+                    Get.snackbar(
+                      "Request Failed",
+                      "There was a problem submitting your request. Please try again.",
+                      snackPosition: SnackPosition.TOP,
+                      // ignore: deprecated_member_use
+                      backgroundColor: Colors.red.withOpacity(0.85),
+                      colorText: Colors.white,
+                      duration: const Duration(seconds: 3),
+                    );
+                  }
                 },
                 style: ElevatedButton.styleFrom(
                   shape: RoundedRectangleBorder(
@@ -74,6 +87,7 @@ class VendorRequestView extends StatelessWidget {
                 child: const Text("Submit Request"),
               ),
             ),
+
           ],
         ),
       ),

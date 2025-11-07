@@ -3,6 +3,8 @@ import 'package:get/get.dart';
 import 'package:kaseapp_ui/controllers/middleware/auth_controller.dart';
 import 'package:kaseapp_ui/controllers/receiveorder_controller.dart';
 import 'package:kaseapp_ui/models/receiveorder_listing.dart';
+import 'package:kaseapp_ui/utils/constants/app_image.dart';
+import 'package:kaseapp_ui/utils/constants/images_converter.dart';
 import 'package:kaseapp_ui/utils/order_details_enum.dart';
 import 'package:kaseapp_ui/configs/themes/app_theme.dart';
 
@@ -135,162 +137,184 @@ class _ReceivePreorderViewState extends State<ReceivePreorderView>
     );
   }
 
- Widget _buildPreorderCard(ReceivePreorderViewModel order) {
+Widget _buildPreorderCard(ReceivePreorderViewModel order) {
   final isPending = order.offerStatus.toLowerCase() == 'pending';
-
-  // Choose which quantity and status to display
   final displayQty = isPending ? order.requestedQty : order.fulfilledQty;
-  final displayStatus = isPending ? order.offerStatus : order.offerStatus;
+  final displayStatus = order.offerStatus;
   final displayNote = order.note;
   final displayDelivery = order.deliveryDate;
 
-  return Container(
-    decoration: BoxDecoration(
-      color: Colors.white,
-      borderRadius: BorderRadius.circular(12),
-      boxShadow: [
-        BoxShadow(
-          color: Colors.black.withOpacity(0.05),
-          blurRadius: 8,
-          offset: const Offset(0, 2),
-        ),
-      ],
-    ),
-    padding: const EdgeInsets.all(16),
-    child: Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        // Header
-        Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: [
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(order.productName,
-                      style: TextStyle(
-                        color: AppTheme.itemTitleColor,
-                        fontSize: 16,
-                        fontWeight: FontWeight.w600,
-                      )),
-                  const SizedBox(height: 4),
-                  Text(
-                    'Vendor: ${order.vendorName}\nQty: $displayQty',
-                    style: TextStyle(
-                      color: AppTheme.itemSubTitleColor,
-                      fontSize: 12,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
-              decoration: BoxDecoration(
-                color: isPending ? Colors.orange : Colors.green,
-                borderRadius: BorderRadius.circular(12),
-              ),
-              child: Text(displayStatus,
-                  style: const TextStyle(
-                      color: Colors.white,
-                      fontSize: 10,
-                      fontWeight: FontWeight.w500)),
-            ),
-          ],
-        ),
+  // Get image URL using converter
+  final imagesConverter = ImagesConverter();
+  final productImageUrl = imagesConverter.getProductImageUrl(order.productImage);
 
-        const SizedBox(height: 16),
+  Color statusColor;
+  if (displayStatus.toLowerCase() == 'pending') {
+    statusColor = Colors.orange;
+  } else if (displayStatus.toLowerCase() == 'accepted' ||
+      displayStatus.toLowerCase() == 'confirmed') {
+    statusColor = Colors.green;
+  } else {
+    statusColor = Colors.red;
+  }
 
-        // Location & Delivery
-        Row(
-          children: [
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text('Location',
-                      style: TextStyle(
-                          color: AppTheme.itemSubTitleColor, fontSize: 12)),
-                  const SizedBox(height: 4),
-                  Text(order.location,
-                      style: const TextStyle(
-                          color: Colors.green,
-                          fontSize: 14,
-                          fontWeight: FontWeight.w600)),
-                ],
-              ),
-            ),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text('Delivery',
-                      style: TextStyle(
-                          color: AppTheme.itemSubTitleColor, fontSize: 12)),
-                  const SizedBox(height: 4),
-                  Text(displayDelivery,
-                      style: const TextStyle(
-                          color: Colors.green,
-                          fontSize: 14,
-                          fontWeight: FontWeight.w600)),
-                ],
-              ),
-            ),
-          ],
-        ),
-
-        const SizedBox(height: 8),
-
-        // Note
-        Text('Note: $displayNote',
-            style: TextStyle(
-              color: AppTheme.itemSubTitleColor,
-              fontSize: 12,
-            )),
-
-        // Action buttons only for pending orders
-        if (isPending) ...[
-          const SizedBox(height: 16),
+  return Card(
+    elevation: 2,
+    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+    shadowColor: Colors.black.withOpacity(0.05),
+    child: Padding(
+      padding: const EdgeInsets.all(16),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // Header row: Product image + info + status
           Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Expanded(
-                child: ElevatedButton(
-                  onPressed: () => _showResponseDialog(
-                      order: order, status: OrderDetailsEnum.accepted),
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.green,
-                    padding: const EdgeInsets.symmetric(vertical: 12),
-                    shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(8)),
-                  ),
-                  child: const Text('Accept',
-                      style: TextStyle(fontWeight: FontWeight.w600)),
+              // Product image
+              ClipRRect(
+                borderRadius: BorderRadius.circular(12),
+                child: Image.network(
+                  productImageUrl,
+                  width: 80,
+                  height: 80,
+                  fit: BoxFit.cover,
+                  errorBuilder: (_, __, ___) =>
+                      Image.asset(AppImage.orderIcon, width: 80, height: 80),
                 ),
               ),
               const SizedBox(width: 12),
+              // Product info
               Expanded(
-                child: OutlinedButton(
-                  onPressed: () => _showResponseDialog(
-                      order: order, status: OrderDetailsEnum.rejected),
-                  style: OutlinedButton.styleFrom(
-                    foregroundColor: Colors.red,
-                    side: const BorderSide(color: Colors.red),
-                    padding: const EdgeInsets.symmetric(vertical: 12),
-                    shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(8)),
-                  ),
-                  child: const Text('Reject',
-                      style: TextStyle(fontWeight: FontWeight.w600)),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(order.productName,
+                        style: TextStyle(
+                          color: AppTheme.itemTitleColor,
+                          fontSize: 16,
+                          fontWeight: FontWeight.w600,
+                        ),
+                        maxLines: 2,
+                        overflow: TextOverflow.ellipsis),
+                    const SizedBox(height: 4),
+                    Text('Vendor: ${order.vendorName}',
+                        style: TextStyle(
+                            color: AppTheme.itemSubTitleColor, fontSize: 12)),
+                    const SizedBox(height: 2),
+                    Text('Qty: $displayQty',
+                        style: TextStyle(
+                            color: AppTheme.itemSubTitleColor, fontSize: 12)),
+                  ],
+                ),
+              ),
+              // Status badge
+              Container(
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                decoration: BoxDecoration(
+                  color: statusColor.withOpacity(0.1),
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(color: statusColor.withOpacity(0.3)),
+                ),
+                child: Text(
+                  displayStatus.capitalizeFirst!,
+                  style: TextStyle(
+                      color: statusColor,
+                      fontSize: 12,
+                      fontWeight: FontWeight.w600),
                 ),
               ),
             ],
-          )
-        ]
-      ],
+          ),
+          const SizedBox(height: 12),
+          // Info grid: location & delivery
+          Row(
+            children: [
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text('Location',
+                        style: TextStyle(
+                            color: AppTheme.itemSubTitleColor, fontSize: 12)),
+                    const SizedBox(height: 4),
+                    Text(order.location,
+                        style: const TextStyle(
+                            color: Colors.green,
+                            fontSize: 14,
+                            fontWeight: FontWeight.w600)),
+                  ],
+                ),
+              ),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text('Delivery',
+                        style: TextStyle(
+                            color: AppTheme.itemSubTitleColor, fontSize: 12)),
+                    const SizedBox(height: 4),
+                    Text(displayDelivery,
+                        style: const TextStyle(
+                            color: Colors.green,
+                            fontSize: 14,
+                            fontWeight: FontWeight.w600)),
+                  ],
+                ),
+              ),
+            ],
+          ),
+          if (displayNote.isNotEmpty) ...[
+            const SizedBox(height: 8),
+            Text('Note: $displayNote',
+                style: TextStyle(
+                    color: AppTheme.itemSubTitleColor, fontSize: 12)),
+          ],
+          // Action buttons for pending orders
+          if (isPending) ...[
+            const SizedBox(height: 12),
+            Row(
+              children: [
+                Expanded(
+                  child: ElevatedButton(
+                    onPressed: () => _showResponseDialog(
+                        order: order, status: OrderDetailsEnum.accepted),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.green,
+                      padding: const EdgeInsets.symmetric(vertical: 12),
+                      shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(8)),
+                    ),
+                    child: const Text('Accept',
+                        style: TextStyle(fontWeight: FontWeight.w600)),
+                  ),
+                ),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: OutlinedButton(
+                    onPressed: () => _showResponseDialog(
+                        order: order, status: OrderDetailsEnum.rejected),
+                    style: OutlinedButton.styleFrom(
+                      foregroundColor: Colors.red,
+                      side: const BorderSide(color: Colors.red),
+                      padding: const EdgeInsets.symmetric(vertical: 12),
+                      shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(8)),
+                    ),
+                    child: const Text('Reject',
+                        style: TextStyle(fontWeight: FontWeight.w600)),
+                  ),
+                ),
+              ],
+            ),
+          ],
+        ],
+      ),
     ),
   );
 }
+
 
 
   Widget _buildEmptyState() {

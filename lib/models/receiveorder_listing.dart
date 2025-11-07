@@ -6,6 +6,7 @@ class ReceivePreorderViewModel {
   final int? orderDetailId;
   final String vendorName;
   final String productName;
+  final String productImage;
   final double requestedQty;
   final double fulfilledQty;
   final String location;
@@ -18,6 +19,7 @@ class ReceivePreorderViewModel {
     this.orderDetailId,
     required this.vendorName,
     required this.productName,
+    required this.productImage,
     required this.requestedQty,
     required this.fulfilledQty,
     required this.location,
@@ -33,6 +35,7 @@ class ReceivePreorderViewModel {
       preOrderId: pre.preOrderId,
       vendorName: pre.vendorName,
       productName: pre.productName,
+      productImage: pre.productImage,
       requestedQty: pre.quantity,
       fulfilledQty: 0,
       location: pre.location,
@@ -50,6 +53,7 @@ class ReceivePreorderViewModel {
       orderDetailId: order.orderDetailId,
       vendorName: order.vendorName,
       productName: order.productName,
+      productImage: order.productImage,
       requestedQty: order.requestedQty,
       fulfilledQty: order.fulfilledQty,
       location: order.location,
@@ -70,12 +74,14 @@ class ReceivePreorderViewModel {
     String? note,
     String? deliveryDate,
     String? offerStatus,
+    String? productImage,
   }) {
     return ReceivePreorderViewModel(
       preOrderId: preOrderId ?? this.preOrderId,
       orderDetailId: orderDetailId ?? this.orderDetailId,
       vendorName: vendorName ?? this.vendorName,
       productName: productName ?? this.productName,
+      productImage: productImage ?? this.productImage,
       requestedQty: requestedQty ?? this.requestedQty,
       fulfilledQty: fulfilledQty ?? this.fulfilledQty,
       location: location ?? this.location,
