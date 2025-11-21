@@ -4,17 +4,12 @@ import 'package:kaseapp_ui/utils/helper/api_helper.dart';
 
 class NotificationRepository {
   final ApiHelper _apiHelper;
-
   NotificationRepository(this._apiHelper);
 
   /// Fetch notifications 
   Future<Map<String, dynamic>> getNotifications() async {
-    
+  
     final response = await _apiHelper.get(endpoint: '/notifications/unread');
-
-    // Debug print
-   // print('Raw API response: $response');
-
     return {
       'total_unread': response['unread_count'] ?? 0,
       'notifications': <NotificationModel>[],  

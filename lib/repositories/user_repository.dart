@@ -25,20 +25,32 @@ class UserRepository {
       return null;
     }
   }
-  Future<Either<Failure, dynamic>> updateProfile(File image) async {
+  Future<Either<Failure, dynamic>> updateProfile({
+    File? image,
+    String? firstName,
+    String? lastName,
+    String? phone,
+  }) async {
     try {
-      final dynamic response = await _apiHelper.postMultipart(
-        endPoint: '/auth/user_profile',
-        jsonBody: {},
+      final Map<String, dynamic> body = {};
+      if (firstName != null) body['first_name'] = firstName;
+      if (lastName != null) body['last_name'] = lastName;
+      if (phone != null) body['phone'] = phone;
+
+      final response = await _apiHelper.updateMultipart(
+        endpoint: '/auth/update-profile',
+        jsonBody: body,
         image: image,
-        imageParam: 'profile_photo' 
+        imageParam: 'profile_url',
       );
+
       return Right(response);
-    } on Failure catch (exception) {
-      // print(exception);
-      return Left(exception);
+    } on Failure catch (e) {
+      return Left(e);
     }
   }
+
+
   Future<Either<Failure, dynamic>> upgradeToFarmer({
     required String name,
     required String? address,
@@ -84,58 +96,56 @@ class UserRepository {
     }
   }
 
-  // // vendor update profile 
-  //  Future<Either<Failure, dynamic>> updateVendorProfile({
-  //   String? name,
-  //   String? vendorType,
-  //   String? address,
-  //   String? about,
-  //   File? logo,
-  // }) async {
-  //   try {
-  //     final response = await _apiHelper.postMultipart(
-  //       endPoint: '/vendor/update-profile',
-  //       jsonBody: {
-  //         'name': name,
-  //         'vendor_type': vendorType,
-  //         'address': address,
-  //         'about': about,
-  //       },
-  //       image: logo,
-  //       imageParam: 'logo',
-  //     );
-  //     return Right(response);
-  //   } on Failure catch (e) {
-  //     return Left(e);
-  //   }
-  // }
+   Future<Either<Failure, dynamic>> updateVendorProfile({
+    String? name,
+    String? vendorType,
+    String? address,
+    String? about,
+    File? logo,
+  }) async {
+    try {
+      final response = await _apiHelper.postMultipart(
+        endPoint: '/vendor/update-profile',
+        jsonBody: {
+          'name': name,
+          'vendor_type': vendorType,
+          'address': address,
+          'about': about,
+        },
+        image: logo ?? File(''),
+        imageParam: 'logo',
+      );
 
-  // // update farm profile
-  
-  // Future<Either<Failure, dynamic>> updateFarmProfile({
-  //   String? name,
-  //   String? address,
-  //   String? description,
-  //   File? logo,
-  //   File? cover,
-  // }) async {
-  //   try {
-  //     final response = await _apiHelper.postMultipart(
-  //       endPoint: '/farm/update-profile',
-  //       jsonBody: {
-  //         'name': name,
-  //         'address': address,
-  //         'description': description,
-  //       },
-  //       image: logo,
-  //       imageParam: 'logo',
-  //       cover: cover,
-  //       coverParam: 'cover',
-  //     );
-  //     return Right(response);
-  //   } on Failure catch (e) {
-  //     return Left(e);
-  //   }
-  // }
+      return Right(response);
+    } on Failure catch (e) {
+      return Left(e);
+    }
+  }
+
+  // Update Farm profile 
+  Future<Either<Failure, dynamic>> updateFarmProfile({
+    String? name,
+    String? address,
+    String? description,
+    File? logo,
+    File? cover,
+  }) async {
+    try {
+      final response = await _apiHelper.postMultipart(
+        endPoint: '/farm/update-profile',
+        jsonBody: {
+          'name': name,
+          'address': address,
+          'description': description,
+        },
+        image: cover ?? File(''),
+        imageParam: 'cover',
+      );
+
+      return Right(response);
+    } on Failure catch (e) {
+      return Left(e);
+    }
+  }
   
 }

@@ -41,10 +41,6 @@ class PreOrderController extends GetxController implements ResettableController 
     fetchPreorder(); // initial fetch
   }
 
-  /// ========================
-  /// Basic PreOrder CRUD
-  /// ========================
-
   Future<bool> createPreOrder({required PreOrder model}) async {
     if (userController.user.id == null) return false;
 
@@ -194,8 +190,7 @@ class PreOrderController extends GetxController implements ResettableController 
       isLoading.value = false;
 
       if (result.isRight()) {
-        // Remove deleted pre-order from the list
-        preOrderListing.removeWhere((item) => item.id == id);
+         preOrderListing.removeWhere((item) => item.id == id);
       }
 
       return result.fold((failure) {

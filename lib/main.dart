@@ -23,7 +23,7 @@ import 'package:kaseapp_ui/repositories/order_detail_repository.dart' as orderDe
 import 'package:kaseapp_ui/repositories/receive_order_repository .dart';
 import 'package:kaseapp_ui/repositories/receive_order_respond_repository.dart';
 
-// Helpers & Routes
+// Helpers & Routes 
 import 'package:kaseapp_ui/utils/helper/api_helper.dart';
 import 'package:kaseapp_ui/configs/routes/routes.dart'; 
 import 'package:firebase_core/firebase_core.dart';
@@ -54,7 +54,7 @@ void main() async {
 
   await flutterLocalNotificationsPlugin.initialize(initializationSettings);
 
-   Get.put(ApiHelper());
+  Get.put(ApiHelper());
   Get.put(SecureStorage());
   Get.put(AuthRepository(Get.find<ApiHelper>(), Get.find<SecureStorage>()));
   Get.put(ProductRepository());

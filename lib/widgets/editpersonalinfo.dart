@@ -14,138 +14,141 @@ class EditPersonalInfoSheet extends StatefulWidget {
 }
 
 class _EditPersonalInfoSheetState extends State<EditPersonalInfoSheet> {
-  final UserController _userController = Get.find();
+  final UserController userController = Get.find();
   final _formKey = GlobalKey<FormState>();
-  final ImagesConverter _imageConverter = ImagesConverter();  
+  final ImagesConverter imageConverter = ImagesConverter();
 
-  late TextEditingController _firstNameController;
-  late TextEditingController _lastNameController;
-  late TextEditingController _phoneController;
-  File? _pickedImage;
+  late TextEditingController firstNameCtrl;
+  late TextEditingController lastNameCtrl;
+  late TextEditingController phoneCtrl;
+
+  File? pickedImage;
 
   @override
   void initState() {
     super.initState();
-    final user = _userController.user;
-    _firstNameController = TextEditingController(text: user.firstName ?? '');
-    _lastNameController = TextEditingController(text: user.lastName ?? '');
-    _phoneController = TextEditingController(text: user.phone ?? '');
+    final user = userController.user;
+    firstNameCtrl = TextEditingController(text: user.firstName ?? "");
+    lastNameCtrl = TextEditingController(text: user.lastName ?? "");
+    phoneCtrl = TextEditingController(text: user.phone ?? "");
   }
 
   @override
   void dispose() {
-    _firstNameController.dispose();
-    _lastNameController.dispose();
-    _phoneController.dispose();
+    firstNameCtrl.dispose();
+    lastNameCtrl.dispose();
+    phoneCtrl.dispose();
     super.dispose();
   }
 
   Future<void> _pickImage() async {
-    final picker = ImagePicker();
-    final picked = await picker.pickImage(source: ImageSource.gallery);
-    if (picked != null) {
-      setState(() {
-        _pickedImage = File(picked.path);
-      });
+    try {
+      final image = await ImagePicker().pickImage(source: ImageSource.gallery);
+      if (image == null) return;
+
+      pickedImage = File(image.path);
+      setState(() {}); // Preview update only
+    } catch (e) {
+      print("Pick image error: $e");
     }
   }
 
-  void _saveChanges() async {
+  Future<void> saveChanges() async {
     if (!_formKey.currentState!.validate()) return;
 
-    if (_pickedImage != null) {
-      await _userController.updateProfile(_pickedImage!);
-    }
+    await userController.updateProfile(
+      image: pickedImage,
+      firstName: firstNameCtrl.text.trim(),
+      lastName: lastNameCtrl.text.trim(),
+      phone: phoneCtrl.text.trim(),
+    );
 
-    _userController.user.firstName = _firstNameController.text;
-    _userController.user.lastName = _lastNameController.text;
-    _userController.user.phone = _phoneController.text;
-
-    Get.back(); // Close bottom sheet
+    Get.back();
     Get.snackbar(
-      'Success',
-      'Profile updated successfully',
-      snackPosition: SnackPosition.BOTTOM,
+      "Success",
+      "Profile updated successfully",
       backgroundColor: Colors.green,
+      colorText: Colors.white,
     );
   }
 
   @override
   Widget build(BuildContext context) {
-    final user = _userController.user;
-
     return Padding(
       padding: EdgeInsets.only(
         bottom: MediaQuery.of(context).viewInsets.bottom,
-        left: 16,
-        right: 16,
+        left: 18,
+        right: 18,
         top: 20,
       ),
       child: SingleChildScrollView(
         child: Column(
           children: [
             Container(
-              width: 60,
-              height: 5,
+              width: 55,
+              height: 6,
               decoration: BoxDecoration(
                 color: Colors.grey[300],
-                borderRadius: BorderRadius.circular(10),
+                borderRadius: BorderRadius.circular(20),
               ),
             ),
             const SizedBox(height: 20),
             const Text(
-              "Edit Personal Info",
+              "Edit Personal Information",
               style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
             ),
             const SizedBox(height: 20),
-
-            // 👤 Profile image with converter
             GestureDetector(
               onTap: _pickImage,
-              child: CircleAvatar(
-                radius: 45,
-                backgroundImage: _pickedImage != null
-                    ? FileImage(_pickedImage!)
-                    : (user.profileUrl != null && user.profileUrl!.isNotEmpty
-                        ? NetworkImage(_imageConverter.getProfileImageUrl(user.profileUrl))
-                        : const AssetImage(AppImage.userProfile)
-                            as ImageProvider),
-              ),
+              child: Obx(() {
+                final profileUrl = userController.user.profileUrl;
+                return CircleAvatar(
+                  radius: 50,
+                  backgroundImage: pickedImage != null
+                      ? FileImage(pickedImage!)
+                      : (profileUrl != null && profileUrl.isNotEmpty)
+                          ? NetworkImage(imageConverter.getProfileImageUrl(profileUrl))
+                          : const AssetImage(AppImage.userProfile) as ImageProvider,
+                  key: ValueKey(profileUrl ?? "default"),
+                );
+              }),
             ),
-
-            const SizedBox(height: 10),
+            const SizedBox(height: 8),
             Text("Tap to change photo", style: TextStyle(color: Colors.grey[600])),
             const SizedBox(height: 20),
-
             Form(
               key: _formKey,
               child: Column(
                 children: [
                   TextFormField(
-                    controller: _firstNameController,
+                    controller: firstNameCtrl,
                     decoration: const InputDecoration(labelText: "First Name"),
-                    validator: (value) =>
-                        value == null || value.isEmpty ? 'Required' : null,
+                    validator: (v) => v!.isEmpty ? "Required" : null,
                   ),
                   const SizedBox(height: 10),
                   TextFormField(
-                    controller: _lastNameController,
+                    controller: lastNameCtrl,
                     decoration: const InputDecoration(labelText: "Last Name"),
                   ),
-                  const SizedBox(height: 10),  
+                  const SizedBox(height: 10),
                   TextFormField(
-                    controller: _phoneController,
+                    controller: phoneCtrl,
                     keyboardType: TextInputType.phone,
                     decoration: const InputDecoration(labelText: "Phone"),
                   ),
-                  const SizedBox(height: 20),
-                  ElevatedButton(
-                    onPressed: _saveChanges,
-                    style: ElevatedButton.styleFrom(
-                      minimumSize: const Size(double.infinity, 45),
-                    ),
-                    child: const Text("Save Changes"),
-                  ),
+                  const SizedBox(height: 10),
+                  Obx(() {
+                    return ElevatedButton(
+                      onPressed: userController.loading.value ? null : saveChanges,
+                      style: ElevatedButton.styleFrom(
+                        minimumSize: const Size(double.infinity, 48),
+                        backgroundColor: Colors.teal,
+                      ),
+                      child: userController.loading.value
+                          ? const CircularProgressIndicator(color: Colors.white)
+                          : const Text("Save Changes"),
+                    );
+                  }),
                 ],
               ),
             ),

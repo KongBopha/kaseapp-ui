@@ -65,6 +65,42 @@ class AuthController extends GetxController {
       _userController.clearUser();
     }
   }
+//   Future<void> hydrateFromStorage() async {
+//   final token = await _storage.readData(key: 'token');
+//   final userJson = await _storage.readData(key: 'user');
+//   _token = token.isNotEmpty ? token : null;
+
+//   if (token.isNotEmpty && userJson.isNotEmpty) {
+//     try {
+//       _userController.setUser(UserModel.fromJson(json.decode(userJson)));
+//       _auth.value = true;
+//       _initAuthControllers();
+
+//       _refreshUserInBackground();
+      
+//     } catch (e) {
+//       _auth.value = false;
+//       _userController.clearUser();
+//       await signOut();
+//     }
+//   } else {
+//     _auth.value = false;
+//     _userController.clearUser();
+//   }
+// }
+
+// Future<void> _refreshUserInBackground() async {
+//   try {
+//     final apiUserJson = await Get.find<AuthRepository>().getCurrentUser();
+//     final apiUser = UserModel.fromJson(apiUserJson);
+    
+//     _userController.setUser(apiUser);
+//     await _storage.writeData(
+//         key: 'user', value: json.encode(apiUser.toJson()));
+//   } catch (e) {
+//     print('Background refresh failed: $e');
+//   }
+// }
 
   Future<void> persistLogin(
       {required String token, required UserModel user}) async {
@@ -101,7 +137,6 @@ class AuthController extends GetxController {
   }
 
   void _initAuthControllers() {
-    // Initialize FCM / NotificationController
     if(!Get.isRegistered<NotificationController>()) {
       Get.put(NotificationController(Get.find<NotificationRepository>()));
     }

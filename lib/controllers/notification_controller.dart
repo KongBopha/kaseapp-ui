@@ -50,7 +50,7 @@ class NotificationController extends GetxController implements ResettableControl
       reset();
     }
   }
-    void startAutoPolling({Duration interval = const Duration(seconds: 10)}) {
+    void startAutoPolling({Duration interval = const Duration(minutes: 20)}) {
     _pollingTimer?.cancel();  
     _pollingTimer = Timer.periodic(interval, (timer) async {
       if (_authController.auth) {
@@ -73,12 +73,22 @@ class NotificationController extends GetxController implements ResettableControl
   }
 
   /// Mark a notification as read
-  Future<void> markAsRead(int id) async {
-    notifications.assignAll(notifications.map((n) =>
-        n.id == id ? n.copyWith(isRead: true) : n).toList());
-    count.value = (count.value > 0) ? count.value - 1 : 0;
-    await _notificationRepository.markAsRead(id);
-  }
+Future<void> markAsRead(int id) async {
+  summaries.assignAll(
+    summaries.map((summary) {
+      final updatedNotifications = summary.notifications.map((n) {
+        if (n.id == id) return n.copyWith(isRead: true);
+        return n;
+      }).toList();
+
+      return summary.copyWith(notifications: updatedNotifications);
+    }).toList()
+  );
+
+  count.value = (count.value > 0) ? count.value - 1 : 0;
+  await _notificationRepository.markAsRead(id);
+}
+
 
 
 }

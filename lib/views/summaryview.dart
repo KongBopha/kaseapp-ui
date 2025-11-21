@@ -154,8 +154,7 @@ class _NotificationCard extends StatefulWidget {
 
 class _NotificationCardState extends State<_NotificationCard> {
   bool _isExpanded = false;
-  final ImagesConverter _imageConverter = ImagesConverter();
-
+  final ImagesConverter imagesConverter = ImagesConverter();
 
   String _getTimeAgo(DateTime dateTime) {
     final now = DateTime.now();
@@ -175,19 +174,92 @@ class _NotificationCardState extends State<_NotificationCard> {
   @override
   Widget build(BuildContext context) {
     final summary = widget.summary;
-    final String? imageUrl = _imageConverter.getProductImageUrl(summary.product?.image);
+
+    // Handle consumer role separately
+    if (widget.currentRole == 'consumer') {
+      final notif = summary.notifications.first;  
+      final isUnread = !notif.isRead;
+
+      return InkWell(
+        onTap: () => widget.controller.markAsRead(notif.id),
+        child: Container(
+          margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
+          padding: const EdgeInsets.all(16),
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(12),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withOpacity(0.04),
+                blurRadius: 8,
+                offset: const Offset(0, 2),
+              ),
+            ],
+          ),
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Container(
+                width: 32,
+                height: 32,
+                decoration: BoxDecoration(
+                  color: isUnread ? const Color(0xFF10B981) : Colors.grey[300],
+                  shape: BoxShape.circle,
+                ),
+                child: Icon(
+                  isUnread ? Icons.circle : Icons.check,
+                  color: Colors.white,
+                  size: isUnread ? 12 : 16,
+                ),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      notif.message,
+                      style: TextStyle(
+                        fontSize: 14,
+                        fontWeight: isUnread ? FontWeight.w600 : FontWeight.normal,
+                        color: Colors.black87,
+                      ),
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      'Refresh the app to update your role.',
+                      style: TextStyle(
+                        fontSize: 12,
+                        color: Colors.grey[500],
+                      ),
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      _getTimeAgo(notif.createdAt.toLocal()),
+                      style: TextStyle(
+                        fontSize: 12,
+                        color: Colors.grey[500],
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        ),
+      );
+    }
+
+    // Product image URL using ImagesConverter
+    final String productImageUrl = imagesConverter.getProductImageUrl(summary.product?.image);
     final productName = summary.product?.name ?? 'Pre-order #${summary.preOrderId}';
+
+    // Partner text
     String partnerText = '';
     if (widget.currentRole == 'vendor' && summary.farm != null) {
-      final FarmModel farm = summary.farm!;
-      partnerText = 'Farm: ${farm.name}';
-    } else if (widget.currentRole == 'farmer' && summary.vendor != null) {
-      final VendorModel vendor = summary.vendor!;
-      partnerText = 'Vendor: ${vendor.companyName ?? 'Unknown'}';
-    } else if (summary.vendor != null) {
-      partnerText = 'Vendor: ${summary.vendor!.companyName ?? 'Unknown'}';
-    } else if (summary.farm != null) {
       partnerText = 'Farm: ${summary.farm!.name}';
+    } else if (widget.currentRole == 'farmer' && summary.vendor != null) {
+      partnerText = 'Vendor: ${summary.vendor!.companyName ?? 'Unknown'}';
     }
 
     return Container(
@@ -212,34 +284,29 @@ class _NotificationCardState extends State<_NotificationCard> {
               padding: const EdgeInsets.all(16),
               child: Row(
                 children: [
-                  // Icon
-                Container(
-                  width: 48,
-                  height: 48,
-                  decoration: BoxDecoration(
-                    borderRadius: BorderRadius.circular(12),
-                    color: Colors.grey[100],
-                    image: summary.product?.image != null && summary.product!.image!.isNotEmpty
-                        ? DecorationImage(
-                            image: NetworkImage(imageUrl!),
-                            fit: BoxFit.cover,
+                  // Product image container
+                  Container(
+                    width: 48,
+                    height: 48,
+                    decoration: BoxDecoration(
+                      borderRadius: BorderRadius.circular(12),
+                      color: Colors.grey[100],
+                      image: productImageUrl.isNotEmpty
+                          ? DecorationImage(
+                              image: NetworkImage(productImageUrl),
+                              fit: BoxFit.cover,
+                            )
+                          : null,
+                    ),
+                    child: productImageUrl.isEmpty
+                        ? Icon(
+                            Icons.shopping_bag_outlined,
+                            color: widget.hasUnread ? const Color(0xFF10B981) : Colors.grey[600],
+                            size: 24,
                           )
                         : null,
                   ),
-                  child: summary.product?.image == null || summary.product!.image!.isEmpty
-                      ? Icon(
-                          Icons.shopping_bag_outlined,
-                          color: widget.hasUnread
-                              ? const Color(0xFF10B981)
-                              : Colors.grey[600],
-                          size: 24,
-                        )
-                      : null,
-                ),
-
                   const SizedBox(width: 12),
-
-                  // Texts
                   Expanded(
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
@@ -251,9 +318,7 @@ class _NotificationCardState extends State<_NotificationCard> {
                                 productName,
                                 style: TextStyle(
                                   fontSize: 16,
-                                  fontWeight: widget.hasUnread
-                                      ? FontWeight.bold
-                                      : FontWeight.w600,
+                                  fontWeight: widget.hasUnread ? FontWeight.bold : FontWeight.w600,
                                   color: Colors.black87,
                                 ),
                                 maxLines: 1,
@@ -294,9 +359,7 @@ class _NotificationCardState extends State<_NotificationCard> {
                     ),
                   ),
                   Icon(
-                    _isExpanded
-                        ? Icons.keyboard_arrow_up
-                        : Icons.keyboard_arrow_down,
+                    _isExpanded ? Icons.keyboard_arrow_up : Icons.keyboard_arrow_down,
                     color: Colors.grey[400],
                   ),
                 ],
@@ -304,7 +367,7 @@ class _NotificationCardState extends State<_NotificationCard> {
             ),
           ),
 
-          // Expand section
+          // Expanded notifications
           if (_isExpanded)
             Container(
               decoration: BoxDecoration(
@@ -320,18 +383,11 @@ class _NotificationCardState extends State<_NotificationCard> {
                   ...summary.notifications.map((notif) {
                     final isUnread = !notif.isRead;
                     return InkWell(
-                      onTap: () {
-                        widget.controller.markAsRead(notif.id);
-                      },
+                      onTap: () => widget.controller.markAsRead(notif.id),
                       child: Container(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 16,
-                          vertical: 12,
-                        ),
+                        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
                         decoration: BoxDecoration(
-                          color: isUnread
-                              ? const Color(0xFF10B981).withOpacity(0.05)
-                              : Colors.transparent,
+                          color: isUnread ? const Color(0xFF10B981).withOpacity(0.05) : Colors.transparent,
                         ),
                         child: Row(
                           crossAxisAlignment: CrossAxisAlignment.start,
@@ -340,9 +396,7 @@ class _NotificationCardState extends State<_NotificationCard> {
                               width: 32,
                               height: 32,
                               decoration: BoxDecoration(
-                                color: isUnread
-                                    ? const Color(0xFF10B981)
-                                    : Colors.grey[300],
+                                color: isUnread ? const Color(0xFF10B981) : Colors.grey[300],
                                 shape: BoxShape.circle,
                               ),
                               child: Icon(
@@ -360,9 +414,7 @@ class _NotificationCardState extends State<_NotificationCard> {
                                     notif.message,
                                     style: TextStyle(
                                       fontSize: 14,
-                                      fontWeight: isUnread
-                                          ? FontWeight.w600
-                                          : FontWeight.normal,
+                                      fontWeight: isUnread ? FontWeight.w600 : FontWeight.normal,
                                       color: Colors.black87,
                                       height: 1.4,
                                     ),
@@ -391,3 +443,4 @@ class _NotificationCardState extends State<_NotificationCard> {
     );
   }
 }
+

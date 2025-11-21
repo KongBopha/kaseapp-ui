@@ -6,19 +6,18 @@ import 'package:kaseapp_ui/models/vendor_model.dart';
 import 'package:kaseapp_ui/repositories/user_repository.dart';
 import 'package:kaseapp_ui/utils/dialogs/dialogs.dart';
 import 'package:kaseapp_ui/controllers/middleware/auth_controller.dart';
+import 'package:kaseapp_ui/utils/error/failure.dart';
 
 class UserController extends GetxController {
   final UserRepository _userRepository = UserRepository();
 
   final Rx<UserModel> _user = UserModel(role: 'consumer').obs;
-  final Rx<UserModel?> otherUser = Rx<UserModel?>(null); // other profile
+  final Rx<UserModel?> otherUser = Rx<UserModel?>(null); // for viewing other profiles
   RxBool loading = false.obs;
 
   UserModel get user => _user.value;
   Rx<UserModel> get userRx => _user;
 
-
-  /// Set user and print debug
   void setUser(UserModel userModel) {
     _user.value = userModel;
     print("[UserController] setUser: ${userModel.toJson()}");
@@ -29,7 +28,6 @@ class UserController extends GetxController {
     print("[UserController] clearUser -> consumer");
   }
 
-  /// Update role locally and persist storage
   Future<void> updateRole(String newRole) async {
     _user.update((val) {
       if (val != null) val.role = newRole;
@@ -38,34 +36,47 @@ class UserController extends GetxController {
     await Get.find<AuthController>().persistUser(_user.value);
   }
 
-  /// Update profile 
-  Future<void> updateProfile(File image) async {
-    loading.value = true;
-    print("[UserController] updateProfile called");
-    final response = await _userRepository.updateProfile(image);
+  /// Update profile and update local user immediately
+Future<void> updateProfile({
+  File? image,
+  String? firstName,
+  String? lastName,
+  String? phone,
+}) async {
+  loading.value = true;
 
-    response.fold(
-      (failure) {
-        loading.value = false;
-        print("[UserController] updateProfile failed: ${failure.message}");
-        final context = Get.context;
-        ErrorDialog.showErrorDialog(
-          context!,
-          title: 'Update profile error',
-          content: '${failure.message}'.tr,
-        );
-      },
-      (success) async {
-        loading.value = false;
-        final updatedUser = UserModel.fromJson(success);
-        _user.value = updatedUser;
-        print("[UserController] updateProfile success: ${updatedUser.toJson()}");
+  final result = await _userRepository.updateProfile(
+    image: image,
+    firstName: firstName,
+    lastName: lastName,
+    phone: phone,
+  );
 
-        // persist updated user
-        await Get.find<AuthController>().persistUser(updatedUser);
-      },
-    );
-  }
+  result.fold(
+    (Failure f) {
+      print("Error: ${f.message}");
+    },
+    (data) {
+      print("Profile updated successfully");
+
+      // Update local GetX user values after backend success
+      _user.update((val) {
+        if (val != null) {
+          if (firstName != null) val.firstName = firstName;
+          if (lastName != null) val.lastName = lastName;
+          if (phone != null) val.phone = phone;
+          if (data["profile_url"] != null) val.profileUrl = data["profile_url"];
+        }
+      });
+
+      Get.find<AuthController>().persistUser(_user.value);
+
+      print("[UserController] Local user updated: ${_user.value.toJson()}");
+    },
+  );
+
+  loading.value = false;
+}
 
   /// Upgrade to Farmer
   Future<void> upgradeToFarmer({
@@ -151,68 +162,81 @@ class UserController extends GetxController {
       loading.value = false;
     }
   }
-  //  // Update Vendor info
-  // Future<void> updateVendorProfile({
-  //   String? name,
-  //   String? vendorType,
-  //   String? address,
-  //   String? about,
-  //   File? logo,
-  // }) async {
-  //   loading.value = true;
-  //   final result = await _userRepository.updateVendorProfile(
-  //     name: name,
-  //     vendorType: vendorType,
-  //     address: address,
-  //     about: about,
-  //     logo: logo,
-  //   );
+   Future<void> updateVendorProfile({
+    String? name,
+    String? vendorType,
+    String? address,
+    String? about,
+    File? logo,
+  }) async {
+    loading.value = true;
 
-  //   result.fold(
-  //     (failure) {
-  //       loading.value = false;
-  //       print('[UserController] updateVendorProfile failed: ${failure.message}');
-  //     },
-  //     (success) {
-  //       loading.value = false;
-  //       _user.value = _user.value.copyWith(
-  //         vendor: VendorModel.fromJson(success['vendor']),
-  //       );
-  //       print('[UserController] updateVendorProfile success');
-  //     },
-  //   );
-  // }
+    final result = await _userRepository.updateVendorProfile(
+      name: name,
+      vendorType: vendorType,
+      address: address,
+      about: about,
+      logo: logo,
+    );
 
-  // // Update Farm info
-  // Future<void> updateFarmProfile({
-  //   String? name,
-  //   String? address,
-  //   String? description,
-  //   File? logo,
-  //   File? cover,
-  // }) async {
-  //   loading.value = true;
-  //   final result = await _userRepository.updateFarmProfile(
-  //     name: name,
-  //     address: address,
-  //     description: description,
-  //     logo: logo,
-  //     cover: cover,
-  //   );
+    result.fold(
+      (failure) {
+        loading.value = false;
+        ErrorDialog.showErrorDialog(
+          Get.context!,
+          title: 'Update vendor profile failed',
+          content: failure.message,
+        );
+      },
+      (success) {
+        loading.value = false;
 
-  //   result.fold(
-  //     (failure) {
-  //       loading.value = false;
-  //       print('[UserController] updateFarmProfile failed: ${failure.message}');
-  //     },
-  //     (success) {
-  //       loading.value = false;
-  //       _user.value = _user.value.copyWith(
-  //         farm: FarmModel.fromJson(success['farm']),
-  //       );
+        _user.value = _user.value.copyWith(
+          vendor: success['vendor'] != null 
+              ? VendorModel.fromJson(success['vendor'])
+              : null,
+        );
+      },
+    );
+  }
 
-  //       print('[UserController] updateFarmProfile success');
-  //     },
-  //   );
-  // }
+  //  Update Farm Profile
+  Future<void> updateFarmProfile({
+    String? name,
+    String? address,
+    String? description,
+    File? logo,
+    File? cover,
+  }) async {
+    loading.value = true;
+
+    final result = await _userRepository.updateFarmProfile(
+      name: name,
+      address: address,
+      description: description,
+      logo: logo,
+      cover: cover,
+    );
+
+    result.fold(
+      (failure) {
+        loading.value = false;
+        ErrorDialog.showErrorDialog(
+          Get.context!,
+          title: 'Update farm profile failed',
+          content: failure.message,
+        );
+      },
+      (success) {
+        loading.value = false;
+
+      _user.value = _user.value.copyWith(
+        farm: success['farm'] != null 
+            ? FarmModel.fromJson(success['farm'])
+            : null,
+      );
+
+      },
+    );
+  }
 }

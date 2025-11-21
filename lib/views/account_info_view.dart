@@ -2,7 +2,6 @@ import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:flutter/widgets.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:kaseapp_ui/controllers/user_controller.dart';
 import 'package:kaseapp_ui/utils/constants/app_image.dart';
@@ -28,7 +27,7 @@ class _AccountInformationViewState extends State<AccountInformationView> {
       File? img = File(image.path);
       setState(() {
         _image = img;
-        _userController.updateProfile(_image!);
+        _userController.updateProfile(image: _image);
       });
     } on PlatformException catch (e) {
       print(e);

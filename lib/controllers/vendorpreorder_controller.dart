@@ -1,8 +1,9 @@
 import 'package:get/get.dart';
 import 'package:kaseapp_ui/controllers/middleware/resettable_controller.dart';
 import 'package:kaseapp_ui/models/preorder_listing.dart';
-import 'package:kaseapp_ui/repositories/receive_order_repository%20.dart';
 import 'package:kaseapp_ui/utils/pre_order_enum.dart';
+
+import '../repositories/receive_order_repository .dart';
 
 class VendorPreOrderController extends GetxController implements ResettableController {
   final ReceiveOrderRepository repo;
@@ -31,9 +32,12 @@ class VendorPreOrderController extends GetxController implements ResettableContr
     final pageToFetch = loadMore ? currentPage.value + 1 : 1;
 
     try {
+      final bool excludePending = selectedStatus.value != PreOrderStatus.pending;
+
       final response = await repo.getReceiveOrders(
         status: selectedStatus.value.value,  
         page: pageToFetch,
+        excludePending: excludePending,  
       );
 
       final data = response['data'] as List<dynamic>;
@@ -63,7 +67,6 @@ class VendorPreOrderController extends GetxController implements ResettableContr
     }
   }
 
-  // Called when user taps a new tab
   void changeStatus(PreOrderStatus status) {
     if (selectedStatus.value != status) {
       selectedStatus.value = status;
@@ -81,3 +84,4 @@ class VendorPreOrderController extends GetxController implements ResettableContr
     selectedStatus.value = PreOrderStatus.pending;
   }
 }
+

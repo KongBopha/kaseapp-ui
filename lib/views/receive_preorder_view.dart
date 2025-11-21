@@ -198,11 +198,17 @@ Widget _buildPreorderCard(ReceivePreorderViewModel order) {
                         maxLines: 2,
                         overflow: TextOverflow.ellipsis),
                     const SizedBox(height: 4),
-                    Text('Vendor: ${order.vendorName}',
+                      Text(
+                        controller.userController.user.role == 'farmer'
+                          ? 'Vendor: ${order.vendorName}'
+                          : 'Farm: ${order.vendorName}',
                         style: TextStyle(
-                            color: AppTheme.itemSubTitleColor, fontSize: 12)),
+                          color: AppTheme.itemSubTitleColor,
+                          fontSize: 12,
+                        ),
+                      ),
                     const SizedBox(height: 2),
-                    Text('Qty: $displayQty',
+                    Text('Quantity: $displayQty',
                         style: TextStyle(
                             color: AppTheme.itemSubTitleColor, fontSize: 12)),
                   ],
@@ -279,6 +285,7 @@ Widget _buildPreorderCard(ReceivePreorderViewModel order) {
                 Expanded(
                   child: ElevatedButton(
                     onPressed: () => _showResponseDialog(
+                        context: context,
                         order: order, status: OrderDetailsEnum.accepted),
                     style: ElevatedButton.styleFrom(
                       backgroundColor: Colors.green,
@@ -290,22 +297,23 @@ Widget _buildPreorderCard(ReceivePreorderViewModel order) {
                         style: TextStyle(fontWeight: FontWeight.w600)),
                   ),
                 ),
-                const SizedBox(width: 8),
-                Expanded(
-                  child: OutlinedButton(
-                    onPressed: () => _showResponseDialog(
-                        order: order, status: OrderDetailsEnum.rejected),
-                    style: OutlinedButton.styleFrom(
-                      foregroundColor: Colors.red,
-                      side: const BorderSide(color: Colors.red),
-                      padding: const EdgeInsets.symmetric(vertical: 12),
-                      shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(8)),
-                    ),
-                    child: const Text('Reject',
-                        style: TextStyle(fontWeight: FontWeight.w600)),
-                  ),
-                ),
+                // const SizedBox(width: 8),
+                // Expanded(
+                //   child: OutlinedButton(
+                //     onPressed: () => _showResponseDialog(
+                //         context: context,
+                //         order: order, status: OrderDetailsEnum.rejected),
+                //     style: OutlinedButton.styleFrom(
+                //       foregroundColor: Colors.red,
+                //       side: const BorderSide(color: Colors.red),
+                //       padding: const EdgeInsets.symmetric(vertical: 12),
+                //       shape: RoundedRectangleBorder(
+                //           borderRadius: BorderRadius.circular(8)),
+                //     ),
+                //     child: const Text('Reject',
+                //         style: TextStyle(fontWeight: FontWeight.w600)),
+                //   ),
+                // ),
               ],
             ),
           ],
@@ -339,80 +347,114 @@ Widget _buildPreorderCard(ReceivePreorderViewModel order) {
       ),
     );
   }
-
 void _showResponseDialog({
+  required BuildContext context,
   required ReceivePreorderViewModel order,
   required OrderDetailsEnum status,
 }) {
   final TextEditingController qtyController = TextEditingController();
   final TextEditingController descController = TextEditingController();
 
-  // Pre-fill quantity for pending orders when accepting
-  if (status == OrderDetailsEnum.accepted && order.offerStatus.toLowerCase() == 'pending') {
+  final String dialogTitle = status == OrderDetailsEnum.accepted
+      ? 'Accept Pre-order'
+      : 'Reject Pre-order';
+
+  final String confirmText = status == OrderDetailsEnum.accepted
+      ? 'ACCEPT'
+      : 'REJECT';
+
+  // Pre-fill quantity only for accepted orders
+  if (status == OrderDetailsEnum.accepted &&
+      order.offerStatus.toLowerCase() == 'pending') {
     qtyController.text = order.requestedQty.toStringAsFixed(0);
   }
 
-  Get.defaultDialog(
-    title: status == OrderDetailsEnum.accepted
-        ? 'Accept Pre-order'
-        : 'Reject Pre-order',
-    content: Column(
-      children: [
-        if (status == OrderDetailsEnum.accepted)
-          TextField(
-            controller: qtyController,
-            keyboardType: TextInputType.number,
-            decoration: const InputDecoration(
-              labelText: 'Quantity you can provide',
-            ),
-          ),
-        TextField(
-          controller: descController,
-          decoration: const InputDecoration(
-            labelText: 'Description (optional)',
+  showDialog(
+    context: context,
+    builder: (BuildContext dialogContext) {
+      return AlertDialog(
+        title: Text(
+          dialogTitle,
+          style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 20),
+        ),
+        content: SingleChildScrollView(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              // Show qty field only for Accepted
+              if (status == OrderDetailsEnum.accepted)
+                Padding(
+                  padding: const EdgeInsets.only(bottom: 16.0),
+                  child: TextField(
+                    controller: qtyController,
+                    keyboardType: TextInputType.number,
+                    decoration: const InputDecoration(
+                      labelText: 'Quantity you can supply',
+                      border: OutlineInputBorder(),
+                      isDense: true,
+                    ),
+                  ),
+                ),
+              TextField(
+                controller: descController,
+                maxLines: 3,
+                decoration: const InputDecoration(
+                  labelText: 'Description (optional)',
+                  border: OutlineInputBorder(),
+                  alignLabelWithHint: true,
+                ),
+              ),
+            ],
           ),
         ),
-      ],
-    ),
-    textConfirm: 'Submit',
-    textCancel: 'Cancel',
-    onConfirm: () async {
-      final qty = int.tryParse(qtyController.text) ?? 0;
+        actions: [
+          TextButton(
+            child: const Text('CANCEL'),
+            onPressed: () => Navigator.of(dialogContext).pop(),
+          ),
+          TextButton(
+            child: Text(confirmText),
+            onPressed: () async {
+              final qty = status == OrderDetailsEnum.rejected
+                  ? 0
+                  : int.tryParse(qtyController.text) ?? 0;
 
-      final success = await controller.respondToPreOrder(
-        order: order,
-        offerStatus: status,
-        fulfilledQty: qty,
-        description: descController.text,
+              final success = await controller.respondToPreOrder(
+                order: order,
+                offerStatus: status,
+                fulfilledQty: qty,
+                description: descController.text,
+              );
+
+              if (success) {
+                final index = controller.allOrders
+                    .indexWhere((o) => o.preOrderId == order.preOrderId);
+
+                if (index != -1) {
+                  controller.allOrders[index] = order.copyWith(
+                    offerStatus: status.name,
+                    fulfilledQty: qty > 0 ? qty.toDouble() : 0,
+                    note: descController.text,
+                  );
+                }
+
+                Navigator.of(dialogContext).pop();
+              } else {
+                Get.snackbar(
+                  'Error',
+                  'Failed to respond. Try again.',
+                  snackPosition: SnackPosition.BOTTOM,
+                );
+              }
+
+            },
+          ),
+        ],
       );
-
-      if (success) {
-        // Update the order in the list
-        final index = controller.allOrders
-            .indexWhere((o) => o.preOrderId == order.preOrderId);
-
-        if (index != -1) {
-          final updatedOrder = order.copyWith(
-            offerStatus: status.value,
-            fulfilledQty: qty > 0 ? qty.toDouble() : order.fulfilledQty,
-            note: descController.text,
-          );
-          controller.allOrders[index] = updatedOrder;
-        }
-
-        Get.back();
-      } else {
-        Get.snackbar(
-          'Error',
-          'Failed to respond. Try again.',
-          snackPosition: SnackPosition.BOTTOM,
-        );
-      }
-    },
-    onCancel: () {
-      Get.back();
     },
   );
 }
 
+
 }
+ 

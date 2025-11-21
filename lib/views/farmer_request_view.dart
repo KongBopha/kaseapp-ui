@@ -36,7 +36,7 @@ class FarmerRequestView extends StatelessWidget {
             const SizedBox(height: 15),
             _buildTextField(aboutController, "About Farm", "Describe your farm", maxLines: 4),
             const SizedBox(height: 15),
-            _buildTextField(logoController, "Farm Logo URL", "Enter your farm logo image URL"),
+            //_buildTextField(logoController, "Farm Logo URL", "Enter your farm logo image URL"),
             const SizedBox(height: 30),
             SizedBox(
               width: double.infinity,

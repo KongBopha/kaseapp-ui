@@ -1,5 +1,6 @@
 import 'package:dartz/dartz.dart';
 import 'package:kaseapp_ui/models/pre_order_model.dart';
+import 'package:kaseapp_ui/models/preorder_response.dart';
 import 'package:kaseapp_ui/models/preorder_vendor_listing.dart';
 import 'package:kaseapp_ui/utils/helper/api_helper.dart';
 import '../utils/error/failure.dart';
@@ -17,7 +18,7 @@ class PreOrderRepository {
   }) async {
     try {
       final preOrder = PreOrder(
-        id: null,
+        id: null ?? 0,
         userId: userId,
         productId: model.productId,
         qty: model.qty,
@@ -38,6 +39,7 @@ class PreOrderRepository {
       final createdPreOrder = PreOrder.fromJson(response);
       return Right(createdPreOrder);
     } on Failure catch (e) {
+      print("Error creating pre-order: ${e.message}");
       return Left(e);
     }
   }
@@ -99,28 +101,46 @@ class PreOrderRepository {
   }) async {
     try {
       final response = await _apiHelper.update(
-        endpoint: '/pre-orders/$id',
+        endpoint: '/update/pre-orders/$id',
         jsonBody: updates,
       );
 
-      return Right(PreOrder.fromJson(response['data']));
+      // print(" Raw update response: $response");
+
+      // CASE 1: backend returns {success: true, data: {...}}
+      if (response is Map<String, dynamic>) {
+        if (response.containsKey('success') && response.containsKey('data')) {
+          if (response['success'] == true) {
+            return Right(PreOrder.fromJson(response['data']));
+          } else {
+            return Left(ServerFailure(message: response['message'] ?? "Unknown error"));
+          }
+        } 
+
+        if (response.containsKey('id')) {
+          return Right(PreOrder.fromJson(response));
+        }
+      }
+      return Left(ServerFailure(message: "Invalid response format"));
     } on Failure catch (e) {
+      print("Error updating pre-order: ${e.message}");
       return Left(e);
     }
   }
 
-  Future<Either<Failure, bool>> deletePreOrder(int id) async {
-    try {
-      await _apiHelper.delete(
-        endpoint: '/pre-orders/$id',
-        queryParameters: {},
-      );
 
-      return const Right(true);
-    } on Failure catch (e) {
-      return Left(e);
+    Future<Either<Failure, bool>> deletePreOrder(int id) async {
+      try {
+        await _apiHelper.delete(
+          endpoint: '/delete/pre-orders/$id',
+          queryParameters: {},
+        );
+
+        return const Right(true);
+      } on Failure catch (e) {
+        return Left(e);
+      }
     }
-  }
   
  /// Order directly from market surplus screen
 Future<Either<Failure, PreOrder>> createOrderFromMarket({
@@ -154,6 +174,17 @@ Future<Either<Failure, PreOrder>> createOrderFromMarket({
 
     final createdPreOrder = PreOrder.fromJson(response);
     return Right(createdPreOrder);
+  } on Failure catch (e) {
+    return Left(e);
+  }
+}
+Future<Either<Failure, PreOrderOfferResponse>> getVendorOffers(int preOrderId) async {
+  try {
+    final response = await _apiHelper.get(
+      endpoint: '/vendor/pre-orders/$preOrderId/offers',
+    );
+
+    return Right(PreOrderOfferResponse.fromJson(response));
   } on Failure catch (e) {
     return Left(e);
   }

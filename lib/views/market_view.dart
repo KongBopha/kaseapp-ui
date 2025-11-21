@@ -75,7 +75,7 @@ class MarketView extends StatelessWidget {
 
             SizedBox(height: size.height * 0.03),
 
-            // 🔹 Banner Section
+            // Banner Section
             CarouselSlider(
               options: CarouselOptions(
                 height: 160.0,
@@ -126,10 +126,10 @@ class MarketView extends StatelessWidget {
                         padding: const EdgeInsets.only(right: 15.0),
                         child: TrendingCard(
                               productName: product.productName,
-                              productDescription: "${product.preOrderCount} pre-orders",        
                               imageUrl: imagesConverter.getProductImageUrl(product.productImage),
                               unit: product.unit,
                               isFromAPI: true,
+                              preOrderPercentage: product.preOrderPercentage,
                         ),
                       );
                     }).toList(),
@@ -235,107 +235,320 @@ class MarketSupplyCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
+    
     return Card(
-      margin: const EdgeInsets.only(bottom: 15),
-      elevation: 3,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
-      child: ListTile(
-        leading: ClipRRect(
-          borderRadius: BorderRadius.circular(10),
-          child: Image.network(
-            supply.productImage,
-            width: 60,
-            height: 60,
-            fit: BoxFit.cover,
+      margin: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+      elevation: 0,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(12),
+        side: BorderSide(
+          color: Colors.grey.shade200,
+          width: 1,
+        ),
+      ),
+      child: InkWell(
+        onTap: () {
+          // Optional: Navigate to detail view
+        },
+        borderRadius: BorderRadius.circular(12),
+        child: Padding(
+          padding: const EdgeInsets.all(12),
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              // Product Image - Larger
+              Hero(
+                tag: 'supply_${supply.id}',
+                child: Container(
+                  width: 100,
+                  height: 100,
+                  decoration: BoxDecoration(
+                    borderRadius: BorderRadius.circular(10),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black.withOpacity(0.06),
+                        blurRadius: 6,
+                        offset: const Offset(0, 2),
+                      ),
+                    ],
+                  ),
+                  child: ClipRRect(
+                    borderRadius: BorderRadius.circular(10),
+                    child: Image.network(
+                      supply.productImage,
+                      fit: BoxFit.cover,
+                      errorBuilder: (context, error, stackTrace) {
+                        return Container(
+                          color: Colors.grey.shade100,
+                          child: Icon(
+                            Icons.image_not_supported_outlined,
+                            size: 36,
+                            color: Colors.grey.shade400,
+                          ),
+                        );
+                      },
+                      loadingBuilder: (context, child, loadingProgress) {
+                        if (loadingProgress == null) return child;
+                        return Container(
+                          color: Colors.grey.shade100,
+                          child: Center(
+                            child: CircularProgressIndicator(
+                              strokeWidth: 2,
+                              value: loadingProgress.expectedTotalBytes != null
+                                  ? loadingProgress.cumulativeBytesLoaded /
+                                      loadingProgress.expectedTotalBytes!
+                                  : null,
+                            ),
+                          ),
+                        );
+                      },
+                    ),
+                  ),
+                ),
+              ),
+              const SizedBox(width: 12),
+              
+              // Product Details - Compact
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    // Product Name
+                    Text(
+                      supply.productName,
+                      style: const TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.black87,
+                      ),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                    const SizedBox(height: 4),
+                    
+                    // Farm Name
+                    Row(
+                      children: [
+                        Icon(
+                          Icons.agriculture_outlined,
+                          size: 14,
+                          color: Colors.green.shade600,
+                        ),
+                        const SizedBox(width: 4),
+                        Expanded(
+                          child: Text(
+                            supply.farmName,
+                            style: TextStyle(
+                              fontSize: 13,
+                              color: Colors.green.shade700,
+                              fontWeight: FontWeight.w500,
+                            ),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 6),
+                    
+                    // Available Quantity
+                    Row(
+                      children: [
+                        Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                          decoration: BoxDecoration(
+                            color: Colors.blue.shade50,
+                            borderRadius: BorderRadius.circular(6),
+                            border: Border.all(
+                              color: Colors.blue.shade200,
+                              width: 1,
+                            ),
+                          ),
+                          child: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Icon(Icons.inventory_2_outlined, size: 12, color: Colors.blue.shade700),
+                              const SizedBox(width: 4),
+                              Text(
+                                '${supply.availableQty} ${supply.unit}',
+                                style: TextStyle(
+                                  fontSize: 12,
+                                  fontWeight: FontWeight.w600,
+                                  color: Colors.blue.shade700,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 4),
+                    
+                    // Harvest Date
+                    Row(
+                      children: [
+                        Icon(
+                          Icons.event_outlined,
+                          size: 12,
+                          color: Colors.orange.shade700,
+                        ),
+                        const SizedBox(width: 4),
+                        Expanded(
+                          child: Text(
+                            DateFormat('MMM dd, yyyy').format(supply.availability),
+                            style: TextStyle(
+                              fontSize: 12,
+                              color: Colors.orange.shade700,
+                              fontWeight: FontWeight.w500,
+                            ),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 8),
+                    
+                    // Action Button - Compact
+                    SizedBox(
+                      width: double.infinity,
+                      child: ElevatedButton(
+                        onPressed: () {
+                          final supplyData = {
+                            'market_supply_id': supply.id,
+                            'product_id': supply.productId,
+                            'product_name': supply.productName,
+                            'farm_id': supply.farmId,
+                            'available_qty': supply.availableQty,
+                            'unit': supply.unit,
+                            'product_image': supply.productImage,
+                          };
+                          Get.to(() => PreOrderRequestView(preFilledData: supplyData));
+                        },
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: colorScheme.primary,
+                          foregroundColor: Colors.white,
+                          padding: const EdgeInsets.symmetric(vertical: 10),
+                          elevation: 0,
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                        ),
+                        child: const Text(
+                          'Place Order',
+                          style: TextStyle(
+                            fontSize: 13,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
           ),
         ),
-        title: Text(
-          supply.productName,
-          style: const TextStyle(fontWeight: FontWeight.bold),
-        ),
-        subtitle: Text(
-          'Farm: ${supply.farmName}\n'
-          'Available: ${supply.availableQty} ${supply.unit}\n'
-          'Date: ${DateFormat('MMM dd, yyyy').format(supply.availability)}',
-          style: const TextStyle(height: 1.5),
-        ),
-        trailing:ElevatedButton(
-          onPressed: () {
-            final supplyData = {
-              'market_supply_id': supply.id,
-              'product_id': supply.productId,
-              'product_name': supply.productName,
-              'farm_id': supply.farmId,
-              'available_qty': supply.availableQty,
-              'unit': supply.unit,
-              'product_image': supply.productImage,
-            };
-
-            Get.to(() => PreOrderRequestView(preFilledData: supplyData));
-          },
-          child: const Text('Request order'),
-        )
       ),
     );
   }
 }
 
- class TrendingCard extends StatelessWidget {
+// TrendingCard
+class TrendingCard extends StatelessWidget {
   const TrendingCard({
     super.key,
-    required this.productDescription,
     required this.imageUrl,
     required this.productName,
     this.unit,
     this.isFromAPI = false,
+    required this.preOrderPercentage,
   });
 
   final String productName;
-  final String productDescription;
   final String imageUrl;
   final String? unit;
   final bool isFromAPI;
+  final double preOrderPercentage;
 
   @override
   Widget build(BuildContext context) {
     final size = MediaQuery.of(context).size;
+
     return Container(
       width: size.width * 0.5 - 20,
-      padding: const EdgeInsets.all(10.0),
+      margin: const EdgeInsets.only(bottom: 10),
       decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(30.0),
-        color: const Color.fromARGB(255, 249, 249, 249),
+        borderRadius: BorderRadius.circular(25),
+        color: Colors.white,
+        boxShadow: [
+          BoxShadow(
+            color: Colors.grey.withOpacity(0.2),
+            blurRadius: 6,
+            spreadRadius: 2,
+            offset: const Offset(0, 4),
+          ),
+        ],
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
+          // Image with gradient overlay
           AspectRatio(
             aspectRatio: 1.1,
-            child: Container(
-              decoration: BoxDecoration(
-                borderRadius: BorderRadius.circular(20),
-                image: DecorationImage(
-                  image: NetworkImage(imageUrl),
-                  fit: BoxFit.cover,
-                ),
+            child: ClipRRect(
+              borderRadius: const BorderRadius.vertical(top: Radius.circular(25)),
+              child: Stack(
+                fit: StackFit.expand,
+                children: [
+                  Image.network(imageUrl, fit: BoxFit.cover),
+                  Container(
+                    decoration: BoxDecoration(
+                      gradient: LinearGradient(
+                        colors: [Colors.black26, Colors.transparent],
+                        begin: Alignment.bottomCenter,
+                        end: Alignment.topCenter,
+                      ),
+                    ),
+                  ),
+                ],
               ),
             ),
           ),
-          const SizedBox(height: 10),
-          Text(
-            productName,
-            style: const TextStyle(
-              fontSize: 16,
-              letterSpacing: 1.0,
-              fontWeight: FontWeight.w600,
+          Padding(
+            padding: const EdgeInsets.all(10.0),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  productName,
+                  style: const TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+                const SizedBox(height: 6),
+                // Progress bar
+                ClipRRect(
+                  borderRadius: BorderRadius.circular(8),
+                  child: LinearProgressIndicator(
+                    value: preOrderPercentage / 100,
+                    minHeight: 6,
+                    backgroundColor: Colors.grey[300],
+                    valueColor: AlwaysStoppedAnimation<Color>(Colors.green),
+                  ),
+                ),
+                const SizedBox(height: 2),
+                Text("${preOrderPercentage.toStringAsFixed(0)}% ",
+                    style: const TextStyle(fontSize: 12, color: Colors.black54)),
+              ],
             ),
-          ),
-          Text(
-            productDescription,
-            style: const TextStyle(color: Colors.black54),
           ),
         ],
       ),
     );
   }
 }
+

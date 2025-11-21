@@ -4,7 +4,7 @@ import 'package:kaseapp_ui/controllers/auth/register_controller.dart';
 import 'package:kaseapp_ui/models/register_model.dart';
 import 'package:kaseapp_ui/utils/gender_enum.dart';
 import 'package:kaseapp_ui/widgets/custom_drop_down_button.dart';
-import 'package:kaseapp_ui/widgets/custom_material_button.dart'; 
+import 'package:kaseapp_ui/widgets/custom_material_button.dart';
 import 'package:kaseapp_ui/widgets/text_form_field.dart';
 
 class RegisterTestView extends StatefulWidget {
@@ -29,7 +29,7 @@ class _RegisterTestViewState extends State<RegisterTestView> {
   Gender? _selectGender;
   bool isShowPassword = false;
   bool isShowCfPassword = false;
-  bool agreePersonalData = true;
+  bool agreePersonalData = false; // Start unchecked
 
   void _onRegister() {
     if (!_formKey.currentState!.validate() || !agreePersonalData) return;
@@ -61,7 +61,7 @@ class _RegisterTestViewState extends State<RegisterTestView> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                /// Logo
+                // Logo
                 SizedBox(
                   height: size.height * 0.1,
                   child: Center(
@@ -73,11 +73,11 @@ class _RegisterTestViewState extends State<RegisterTestView> {
                 ),
                 const SizedBox(height: 12),
 
-                /// Title
+                // Title
                 Center(
                   child: Text(
                     "Sign Up",
-                    style: TextStyle(
+                    style: const TextStyle(
                       fontSize: 24,
                       fontWeight: FontWeight.w600,
                       color: Colors.black87,
@@ -86,7 +86,7 @@ class _RegisterTestViewState extends State<RegisterTestView> {
                 ),
                 const SizedBox(height: 20),
 
-                /// First name
+                // First name
                 CustomTextFormField(
                   controller: first,
                   emptyText: "First name is required",
@@ -95,7 +95,7 @@ class _RegisterTestViewState extends State<RegisterTestView> {
                 ),
                 const SizedBox(height: 16),
 
-                /// Last name
+                // Last name
                 CustomTextFormField(
                   controller: last,
                   emptyText: "Last name is required",
@@ -104,7 +104,7 @@ class _RegisterTestViewState extends State<RegisterTestView> {
                 ),
                 const SizedBox(height: 16),
 
-                /// Gender dropdown
+                // Gender dropdown
                 CustomDropDownButtonFormField(
                   items: Gender.values
                       .map((g) => DropdownMenuItem<Gender>(
@@ -120,7 +120,7 @@ class _RegisterTestViewState extends State<RegisterTestView> {
                 ),
                 const SizedBox(height: 16),
 
-                /// Phone
+                // Phone
                 CustomTextFormField(
                   controller: phone,
                   emptyText: "Phone number cannot be empty",
@@ -131,7 +131,7 @@ class _RegisterTestViewState extends State<RegisterTestView> {
                 ),
                 const SizedBox(height: 16),
 
-                /// Email
+                // Email
                 CustomTextFormField(
                   controller: email,
                   emptyText: "Email cannot be empty",
@@ -142,7 +142,7 @@ class _RegisterTestViewState extends State<RegisterTestView> {
                 ),
                 const SizedBox(height: 16),
 
-                /// Password
+                // Password
                 CustomTextFormField(
                   controller: pass,
                   emptyText: "Password cannot be empty",
@@ -158,7 +158,7 @@ class _RegisterTestViewState extends State<RegisterTestView> {
                 ),
                 const SizedBox(height: 16),
 
-                /// Confirm password
+                // Confirm password
                 CustomTextFormField(
                   controller: pass2,
                   emptyText: "Confirm password cannot be empty",
@@ -174,7 +174,7 @@ class _RegisterTestViewState extends State<RegisterTestView> {
                 ),
                 const SizedBox(height: 20),
 
-                /// Privacy & terms check
+                // Privacy & terms check
                 Row(
                   children: [
                     Checkbox(
@@ -193,25 +193,28 @@ class _RegisterTestViewState extends State<RegisterTestView> {
                 ),
                 const SizedBox(height: 20),
 
-                /// Register button
-                Obx(() => CustomMaterialButton(
-                      width: size.width,
-                      height: size.height * 0.06,
-                      color: Colors.blueAccent,
-                      borderRadius: BorderRadius.circular(10),
-                      onTap: _onRegister,
-                      child: c.isLoading.value
-                          ? const Center(
-                              child: CircularProgressIndicator(
-                                color: Colors.white,
-                                strokeWidth: 2,
-                              ),
-                            )
-                          : const Text(
-                              "Sign Up",
-                              style: TextStyle(color: Colors.white),
-                            ),
-                    )),
+                // Register button
+                CustomMaterialButton(
+                  width: size.width,
+                  height: size.height * 0.06,
+                  color: agreePersonalData ? Colors.blueAccent : Colors.grey,
+                  borderRadius: BorderRadius.circular(10),
+                  onTap: () {
+                    if (!agreePersonalData) return; // disabled if unchecked
+                    _onRegister();
+                  },
+                  child: Obx(() => c.isLoading.value
+                      ? const Center(
+                          child: CircularProgressIndicator(
+                            color: Colors.white,
+                            strokeWidth: 2,
+                          ),
+                        )
+                      : const Text(
+                          "Sign Up",
+                          style: TextStyle(color: Colors.white),
+                        )),
+                ),
               ],
             ),
           ),

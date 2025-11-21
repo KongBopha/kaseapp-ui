@@ -8,7 +8,7 @@ class LoginView extends StatelessWidget {
 
   final c = Get.put(LoginController());
 
-  final phoneController = TextEditingController(text: "028498984");
+  final phoneController = TextEditingController(text: "028 498 984");
   final passwordController = TextEditingController(text: "LorenWalson@#0011");
 
   @override
@@ -72,7 +72,6 @@ class LoginView extends StatelessWidget {
                           borderRadius: BorderRadius.circular(10.0),
                         ),
                       ),
-                      keyboardType: TextInputType.phone,
                     ),
                     const SizedBox(height: 15),
                     TextField(

@@ -53,7 +53,7 @@ class PreOrder {
         'product_id': productId,
         'qty': qty,
         'location': location,
-        'note_text': noteText,
+        'note': noteText,
         'delivery_date': deliveryDate.toIso8601String(),
         'recurring_schedule': recurringSchedule,
         'status': status.value, // enum to string

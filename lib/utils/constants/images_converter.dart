@@ -10,12 +10,6 @@ class ImagesConverter {
     final cleanPath = productImageUrl.replaceAll(RegExp(r'^/storage/product_images/'), '');
     return '${Constants.mainUrl}/storage/product_images/$cleanPath';
   }
-  // String getVendorImageUrl(String? vendorImageUrl){
-
-  // }
-  // String getFarmImageUrl(String? farmImageUrl){
-
-  // }
     // Profile images
   String getProfileImageUrl(String? profileImageUrl) {
     if (profileImageUrl == null || profileImageUrl.isEmpty) return AppImage.userProfile;

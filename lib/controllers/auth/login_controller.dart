@@ -37,6 +37,8 @@ class LoginController extends GetxController{
           title: 'Login Failed',
           content: failure.message,
         );
+        print('Login Failure: ${failure.message}');
+
       },
       (success) async {
         final response = success as Map<String, dynamic>;
@@ -45,7 +47,8 @@ class LoginController extends GetxController{
           final user = UserModel.fromJson(response['user']);
 
           await _secureStorage.writeData(key: 'token', value: token);
-          await _secureStorage.writeData(key: 'user', value: jsonEncode(response['user']));
+          await _secureStorage.writeData(key: 'user', value: jsonEncode
+          (response['user']));
 
           auth.setAuthenticated(true);
           userController.setUser(user);
@@ -56,8 +59,8 @@ class LoginController extends GetxController{
             snackPosition: SnackPosition.TOP,
             // ignore: deprecated_member_use
             backgroundColor: Colors.green.withOpacity(0.8),
-            colorText: Colors.white,
-            duration: const Duration(seconds: 2),
+            colorText: const Color.fromARGB(255, 107, 77, 77),
+            duration: const Duration(seconds: 2), 
           );
 
           Future.delayed(const Duration(milliseconds: 500), () {

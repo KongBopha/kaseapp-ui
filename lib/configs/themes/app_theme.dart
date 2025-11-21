@@ -25,6 +25,7 @@ class AppTheme {
   final Color backgroundColor = Colors.white;
   static Color APPBAR_COLOR = const Color(0xfff006a4d);
   static Color ICON_COLOR = const Color(0xfff006a4d);
+  static Color date_Color = const Color.fromARGB(255, 97, 191, 43);
 
   static const textStyle = TextStyle(
       fontSize: 15, fontWeight: FontWeight.w600, color: Colors.black87);

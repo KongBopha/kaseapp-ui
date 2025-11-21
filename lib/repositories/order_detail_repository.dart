@@ -20,6 +20,7 @@ class OrderDetailRepository {
       );
 
       final submittedOrderDetail = OrderDetailModel.fromJson(response);
+      print(  "Submitted Order Detail: $submittedOrderDetail");
       return right(submittedOrderDetail);
     } on Failure catch (e) {
       return left(e);
@@ -30,14 +31,12 @@ class OrderDetailRepository {
   Future<Either<Failure,bool>> rejectPreOrder(
     { required int preOrderId,
       required int userId,
-      required OrderDetailModel orderDetail,
 }
   )async{
     try{
       final response = await _apiHelper.post(
-        endpoint: '/', 
+        endpoint: '/pre-order/reject/$preOrderId', 
         jsonBody: {
-          
       },
       );
     return right(response['success']??true);

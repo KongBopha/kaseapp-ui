@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import 'package:kaseapp_ui/controllers/auth/logout_controller.dart';
 import 'package:kaseapp_ui/controllers/user_controller.dart';
+import 'package:kaseapp_ui/controllers/auth/logout_controller.dart';
 import 'package:kaseapp_ui/utils/constants/app_image.dart';
 import 'package:kaseapp_ui/utils/constants/base_api.dart';
 import 'package:kaseapp_ui/views/personal_info_view.dart';
@@ -13,14 +13,11 @@ class AccountView extends StatelessWidget {
   final UserController _userController = Get.find();
   final LogoutController _logoutController = Get.put(LogoutController());
 
-  // Helper to get profile image URL
   String getProfileImageUrl(String? profileUrl) {
     if (profileUrl == null || profileUrl.isEmpty) return AppImage.userProfile;
-
     if (profileUrl.startsWith("http")) return profileUrl;
-    final cleanPath =
-        profileUrl.replaceAll(RegExp(r'^/storage/profile_photos/'), '');
-    return '${Constants.mainUrl}/storage/profile_photos/$cleanPath';
+    final cleanPath = profileUrl.replaceAll(RegExp(r'^/storage/'), '');
+    return '${Constants.mainUrl}/storage/$cleanPath';
   }
 
   @override
@@ -43,72 +40,57 @@ class AccountView extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // Profile section
             Container(
               width: size.width,
               padding: const EdgeInsets.all(25),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.center,
                 children: [
-                  Obx(
-                    () => Material(
-                      borderRadius: BorderRadius.circular(50),
-                      child: Padding(
-                        padding: const EdgeInsets.all(2.0),
-                        child: CircleAvatar(
-                          radius: size.height * 0.06,
-                          backgroundImage:
-                              _userController.user.profileUrl == null ||
-                                      _userController
-                                          .user.profileUrl!.isEmpty
-                                  ? const AssetImage(AppImage.userProfile)
-                                      as ImageProvider
-                                  : NetworkImage(getProfileImageUrl(
-                                      _userController.user.profileUrl)),
-                          key: ValueKey(
-                              _userController.user.profileUrl ?? "default"),
-                        ),
-                      ),
-                    ),
-                  ),
+                  Obx(() {
+                    final user = _userController.user;
+                    return CircleAvatar(
+                      radius: size.height * 0.06,
+                      backgroundImage: user.profileUrl == null || user.profileUrl!.isEmpty
+                          ? const AssetImage(AppImage.userProfile) as ImageProvider
+                          : NetworkImage(getProfileImageUrl(user.profileUrl)),
+                      key: ValueKey(user.profileUrl ?? "default"),
+                    );
+                  }),
                   const SizedBox(height: 12),
-                  Obx(
-                    () => Column(
+                  Obx(() {
+                    final user = _userController.user;
+                    return Column(
                       crossAxisAlignment: CrossAxisAlignment.center,
                       children: [
                         Text(
-                          _userController.user.firstName != null
-                              ? "${_userController.user.firstName} ${_userController.user.lastName ?? ''}"
-                              : "No Username".tr,
-                          style: const TextStyle(
-                              fontSize: 28, fontWeight: FontWeight.w500),
+                          user.firstName != null
+                              ? "${user.firstName} ${user.lastName ?? ''}"
+                              : "No Username",
+                          style: const TextStyle(fontSize: 28, fontWeight: FontWeight.w500),
                         ),
                         const SizedBox(height: 4),
                         Text(
-                          _userController.user.role,
-                          style: const TextStyle(
-                              fontSize: 16, color: Colors.black54),
+                          user.role,
+                          style: const TextStyle(fontSize: 16, color: Colors.black54),
                         ),
                       ],
-                    ),
-                  ),
+                    );
+                  }),
                 ],
               ),
             ),
             const SizedBox(height: 10),
             Feature(
-              title: "My information".tr,
+              title: "My information",
               showIcon: true,
-              onTap: () {
-                Get.to(() => const PersonalInfoView());
-              },
+              onTap: () => Get.to(() => const PersonalInfoView()),
             ),
             const SizedBox(height: 10),
             const Padding(
               padding: EdgeInsets.only(left: 20, top: 10, bottom: 20),
               child: Text(
                 "connect with other services",
-                style: TextStyle(color: Colors.black45),  
+                style: TextStyle(color: Colors.black45),
               ),
             ),
             const Feature(title: "Customer Service", showIcon: false),
@@ -117,17 +99,13 @@ class AccountView extends StatelessWidget {
             const SizedBox(height: 10),
             const Feature(title: "Address", showIcon: false),
             const SizedBox(height: 10),
-            Obx(
-              () => _userController.user.firstName != null
-                  ? Feature(
-                      title: "Log Out".tr,
-                      showIcon: false,
-                      onTap: () {
-                        _logoutController.logoutWithConfirmation();
-                      },
-                    )
-                  : const SizedBox.shrink(),
-            ),
+            Obx(() => _userController.user.firstName != null
+                ? Feature(
+                    title: "Log Out",
+                    showIcon: false,
+                    onTap: () => _logoutController.logoutWithConfirmation(),
+                  )
+                : const SizedBox.shrink()),
           ],
         ),
       ),
@@ -136,9 +114,7 @@ class AccountView extends StatelessWidget {
 }
 
 class Feature extends StatelessWidget {
-  const Feature(
-      {Key? key, required this.title, required this.showIcon, this.onTap})
-      : super(key: key);
+  const Feature({Key? key, required this.title, required this.showIcon, this.onTap}) : super(key: key);
 
   final String title;
   final bool showIcon;
@@ -163,8 +139,7 @@ class Feature extends StatelessWidget {
             children: [
               Text(title, style: const TextStyle(fontSize: 16)),
               if (showIcon)
-                const Icon(Icons.arrow_forward_ios_outlined,
-                    size: 16, color: Colors.grey),
+                const Icon(Icons.arrow_forward_ios_outlined, size: 16, color: Colors.grey),
             ],
           ),
         ),

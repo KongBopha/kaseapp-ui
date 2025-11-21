@@ -52,10 +52,8 @@ class ApiHelper {
         queryParameters: queryParameters,
         options: AOptions(headers: _headers(token)),
       );
-
-      _handleUnauthorized(response);
-
-      if (response.statusCode == 200 || response.statusCode == 201) {
+      
+      if (response.statusCode == 200) {
         return response.data as Map<String, dynamic>;
       }
       throw ServerFailure(message: 'Invalid response from server');
@@ -138,7 +136,42 @@ class ApiHelper {
       rethrow;
     }
   }
+ Future<dynamic> updateMultipart({
+  required String endpoint,
+  required Map<String, dynamic> jsonBody,
+  File? image,
+  String imageParam = 'profile_url',
+}) async {
+  try {
+    final token = await _secureStorage.readData(key: 'token');
 
+    if (image != null) {
+      final response = await _aHttpClient.postMultipartAPI(
+        Constants.baseUrl + endpoint,
+        body: jsonBody,
+        image: image,
+        imageParam: imageParam,
+        options: AOptions(headers: _headers(token)),
+      );
+
+      _handleUnauthorized(response);
+
+      return response.data;
+    } else {
+      final response = await _aHttpClient.postAPI(
+        Constants.baseUrl + endpoint,
+        body: jsonBody,
+        options: AOptions(headers: _headers(token)),
+      );
+
+      _handleUnauthorized(response);
+
+      return response.data;
+    }
+  } catch (e) {
+    rethrow;
+  }
+}
   // -----------------------------
   // MULTIPART POST
   // -----------------------------

@@ -17,12 +17,12 @@ class UserModel {
   });
 
   final int? id;
-  late final String? firstName;
-  late final String? lastName;
-  late final String? profileUrl;
-  late final String? email;
-  late final String? phone;
-  late String role;
+  String? firstName;
+  String? lastName;
+  String? profileUrl;
+  String? email;
+  String? phone;
+  String role;
   FarmModel? farm;
   VendorModel? vendor;
   final DateTime? createdAt;

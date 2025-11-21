@@ -239,7 +239,7 @@ Future<AResponse> postAPI(
       final Response response = await _dio.post(
         path,
         data: formData,
-        options: Options(headers: options?.headers),
+        options: Options(headers: options?.headers  ?? {'Content-Type': 'multipart/form-data'}),
       );
 
       Map<String, dynamic> apiData;
@@ -271,4 +271,47 @@ Future<AResponse> postAPI(
       log('MULTIPART POST request finished: $path');
     }
   }
+  // ---------------------- MULTIPART POST ----------------------
+Future<AResponse> putMultipartAPI(String path, 
+    {required FormData body, AOptions? options}) async {
+  try {
+
+    
+    final Response response = await _dio.post(
+      path,
+      data: body,
+      options: Options(headers: options?.headers ),
+    );
+
+    Map<String, dynamic> apiData;
+    if (response.data is String) {
+      apiData = json.decode(response.data);
+    } else {
+      apiData = response.data;
+    }
+
+    return AResponse(
+      statusCode: response.statusCode,
+      data: apiData['data'],
+      message: apiData['msg']?.toString() ?? '',
+    );
+  } on DioException catch (e) {
+    String message = 'Unknown network error';
+    if (e.response != null) {
+      final resData = e.response!.data;
+      if (resData is Map && resData.containsKey('msg')) {
+        message = resData['msg'].toString();
+      } else {
+        message = resData.toString();
+      }
+    }
+    throw ServerFailure(message: message);
+  } catch (e) {
+    throw ServerFailure(message: e.toString());
+  } finally {
+    log('MULTIPART post request finished: $path');
+  }
+}
+
+
 }

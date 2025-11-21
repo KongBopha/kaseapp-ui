@@ -30,39 +30,31 @@ class PersonalInfoView extends StatelessWidget {
               // Profile photo
               CircleAvatar(
                 radius: 55,
-                backgroundImage: user.profileUrl == null ||
-                        user.profileUrl!.isEmpty
+                backgroundImage: (user.profileUrl == null || user.profileUrl!.isEmpty)
                     ? const AssetImage(AppImage.userProfile) as ImageProvider
                     : NetworkImage(imageConverter.getProfileImageUrl(user.profileUrl)),
+                key: ValueKey(user.profileUrl ?? "default"),
               ),
               const SizedBox(height: 20),
-
               // Full name
               Text(
                 "${user.firstName ?? ''} ${user.lastName ?? ''}".trim(),
-                style:
-                    const TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
+                style: const TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
               ),
               const SizedBox(height: 8),
-
               // Role
               Text(
                 user.role,
                 style: const TextStyle(color: Colors.grey, fontSize: 16),
               ),
               const SizedBox(height: 20),
-
               const Divider(thickness: 1),
-
               const SizedBox(height: 10),
               InfoTile(title: "First Name", value: user.firstName ?? "Not provided"),
               InfoTile(title: "Last Name", value: user.lastName ?? "Not provided"),
               InfoTile(title: "Email", value: user.email ?? "Not provided"),
               InfoTile(title: "Phone", value: user.phone ?? "Not provided"),
-              InfoTile(title: "Last Name", value: user.lastName ?? "Not provided"),
-
               const SizedBox(height: 30),
-
               ElevatedButton.icon(
                 onPressed: () {
                   showModalBottomSheet(
@@ -80,11 +72,9 @@ class PersonalInfoView extends StatelessWidget {
                   backgroundColor: Colors.teal,
                   foregroundColor: Colors.white,
                   padding: const EdgeInsets.symmetric(horizontal: 30, vertical: 12),
-                  shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(10)),
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
                 ),
               ),
-
             ],
           ),
         );
@@ -102,10 +92,8 @@ class InfoTile extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return ListTile(
-      title: Text(title,
-          style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 16)),
-      subtitle: Text(value,
-          style: const TextStyle(color: Colors.black87, fontSize: 15)),
+      title: Text(title, style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 16)),
+      subtitle: Text(value, style: const TextStyle(color: Colors.black87, fontSize: 15)),
       leading: const Icon(Icons.info_outline, color: Colors.teal),
       contentPadding: const EdgeInsets.symmetric(vertical: 4, horizontal: 8),
     );

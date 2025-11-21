@@ -34,25 +34,28 @@ class RegisterController extends GetxController {
   try {
     final response = await _registerRepository.register(registerModel: register);
 
-    response.fold(
-      (failure) {
-        if (failure is NoInternetConnection) {
-          ErrorDialog.showErrorDialog(
-            context!,
-            title: ' ${'Internet Connection'}',
-            content: ' ${'No Internet Connection'}',
-          );
-        } else {
-          print(' ${failure.message}');
-          ErrorDialog.showErrorDialog(
-            context!,
-            title: 'Register Failed',
-            content: ' ${failure.message}',
-          );
-        }
-      },
-(success) {
-    final response = success as Map<String, dynamic>;
+response.fold(
+  (failure) {
+    // LEFT = failure
+    if (failure is NoInternetConnection) {
+      ErrorDialog.showErrorDialog(
+        context!,
+        title: 'No Internet Connection',
+        content: 'Please check your network.',
+      );
+    } else {
+      print(failure.message);
+      ErrorDialog.showErrorDialog(
+        context!,
+        title: 'Register Failed',
+        content: failure.message,
+      );
+    }
+  },
+  (data) {
+    // RIGHT = success
+    final response = data as Map<String, dynamic>;
+
     if (response.containsKey('access_token') || response.containsKey('access_Token')) {
       final token = response['access_token'] ?? response['access_Token'];
       final user = UserModel.fromJson(response['user']);
@@ -63,23 +66,22 @@ class RegisterController extends GetxController {
       authController.setAuthenticated(true);
       userController.setUser(user);
 
-      // Show welcome Snackbar
       Get.snackbar(
         "Welcome",
         "Welcome ${user.firstName}!",
         snackPosition: SnackPosition.BOTTOM,
         backgroundColor: Colors.green.withOpacity(0.8),
         colorText: Colors.white,
-        duration: const Duration(seconds: 3),
       );
-      // Navigate to HomePage
+
       Navigator.of(context!).pushAndRemoveUntil(
         MaterialPageRoute(builder: (context) => const MainView()),
-        (Route<dynamic> route) => false,
+        (route) => false,
       );
     }
-      },
-    );
+  },
+);
+
     } catch (e) {
     if (context != null) {
       ErrorDialog.showErrorDialog(
